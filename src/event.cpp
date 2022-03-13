@@ -6,6 +6,8 @@
 #include <iomanip>
 #include "descriptor.h"
 #include "binbuffer.h"
+#include "underlying/event_field_types.h"
+#include "underlying/byte_op.h"
 
 std::string convert_sid(const unsigned char *sid) {
     std::stringstream ss;
@@ -119,9 +121,52 @@ void UnknownEvent::_print() {
 }
 
 void TableMapEvent::decode(BinBuffer *buffer) {
-
+    tableId = buffer->read6Byte();
+    buffer->skip(3);
+    database = std::move(buffer->readZeroTerminatedString());
+    buffer->skip(1);
+    table = std::move(buffer->readZeroTerminatedString());
+    numberOfColumns = buffer->readPackedInteger();
+    for (int i = 0; i < numberOfColumns; i++) {
+        columnTypes.push_back(buffer->readByte());
+    }
+    metadataLength = buffer->readPackedInteger();
+    //_readMetadata(buffer);
+    ColumnNullability = std::move(readBitSet(buffer, numberOfColumns, true));
 }
 
 void TableMapEvent::_print() {
+    std::cerr << "Table id = " << tableId << ", " << "Database = " << database << ", " << "Table = " << table << ", "
+              << "Number of Cols = " << numberOfColumns << std::endl;
+}
 
+void TableMapEvent::_readMetadata(BinBuffer *buffer) {
+    for (int i = 0; i < numberOfColumns; i++) {
+        switch ((ColumnType) columnTypes[i]) {
+            case ColumnType::MYSQL_TYPE_FLOAT:
+            case ColumnType::MYSQL_TYPE_DOUBLE:
+            case ColumnType::MYSQL_TYPE_BLOB:
+            case ColumnType::MYSQL_TYPE_JSON:
+            case ColumnType::MYSQL_TYPE_GEOMETRY:
+                columnMetadata[i] = buffer->readByte();
+                break;
+            case ColumnType::MYSQL_TYPE_BIT:
+            case ColumnType::MYSQL_TYPE_VARCHAR:
+            case ColumnType::MYSQL_TYPE_NEWDECIMAL:
+                columnMetadata[i] = buffer->read2Byte();
+                break;
+            case ColumnType::MYSQL_TYPE_SET:
+            case ColumnType::MYSQL_TYPE_ENUM:
+            case ColumnType::MYSQL_TYPE_STRING:
+                columnMetadata[i] = buffer->read2ByteInBigEndian();
+                break;
+            case ColumnType::MYSQL_TYPE_TIME_V2:
+            case ColumnType::MYSQL_TYPE_DATETIME_V2:
+            case ColumnType::MYSQL_TYPE_TIMESTAMP_V2:
+                columnMetadata[i] = buffer->readByte();
+                break;
+            default:
+                columnMetadata[i] = 0;
+        }
+    }
 }

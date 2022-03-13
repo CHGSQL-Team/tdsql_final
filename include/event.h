@@ -1,8 +1,9 @@
 #include <cstddef>
-#include <stdint.h>
+#include <cstdint>
 #include "underlying/event_internal.h"
 #include "binbuffer.h"
 #include <string>
+#include <vector>
 
 class EventHeader;
 
@@ -36,11 +37,19 @@ public:
     std::string database;
     std::string table;
 
+    uint64_t numberOfColumns;
+    std::vector<uint8_t> columnTypes;
+    uint64_t metadataLength;
+    std::vector<uint32_t> columnMetadata;
+    std::vector<bool> ColumnNullability;
+
     using Event::Event;
 
     void decode(BinBuffer *buffer);
 
     void _print() override;
+
+    void _readMetadata(BinBuffer *buffer);
 };
 
 class GTIDEvent : public Event {

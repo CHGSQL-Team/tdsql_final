@@ -56,6 +56,7 @@ add_executable(run
         src/binfetch.cpp
         src/event.cpp
         src/underlying/event_internal.cpp
+        src/underlying/byte_op.cpp
         src/binbuffer.cpp
         src/table_map_event_metadata.cpp
         )

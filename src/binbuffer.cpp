@@ -64,3 +64,31 @@ uint64_t BinBuffer::read8Byte() {
     readRaw(&value, 8);
     return value;
 }
+
+std::string BinBuffer::readZeroTerminatedString() {
+    uint8_t byte = 0;
+    std::string value;
+    while ((byte = readByte())) {
+        value += (char) byte;
+    }
+    return value;
+}
+
+uint16_t BinBuffer::read2ByteInBigEndian() {
+    uint16_t value = 0;
+    uint8_t byteA = readByte();
+    uint8_t byteB = readByte();
+    value = byteA;
+    value <<= 8;
+    value += byteB;
+    return value;
+}
+
+std::vector<uint8_t> BinBuffer::readToVector(size_t length) {
+    std::vector<uint8_t> value;
+    value.reserve(length);
+    for (auto i = 0; i < length; i++) {
+        value.push_back(readByte());
+    }
+    return value;
+}
