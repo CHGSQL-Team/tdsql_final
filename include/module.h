@@ -4,6 +4,7 @@
 #include "config.h"
 #include "sqlconn.h"
 #include "logger.h"
+#include "timed.h"
 #include <map>
 #include <vector>
 #include <boost/asio/io_service.hpp>
@@ -15,6 +16,7 @@ public:
     Config *config;
     SQLPool *sqlPool;
     Logger *logger;
+    Timed timed;
     boost::asio::thread_pool *subworkerPool;
     boost::asio::thread_pool *hasherPool;
     boost::asio::thread_pool *reducerPool;
@@ -23,6 +25,8 @@ public:
     std::map<unsigned int, TableDescriptor *> tables;
 
     explicit Module(Config *_config);
+
+    void _init();
 
     ~Module();
 };

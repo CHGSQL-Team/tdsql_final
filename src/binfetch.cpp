@@ -1,12 +1,10 @@
 #include <iostream>
+#include <fstream>
 #include "binfetch.h"
 #include "config.h"
 #include "event.h"
 
-
-void gtid_callback(MYSQL_RPL *rpl, unsigned char *packet_gtid_set) {
-
-}
+const unsigned char magic[] = {0xfe, 0x62, 0x69, 0x6e};
 
 
 MYSQL *BinaryFetcher::_initConn(const char *ip, const char *usr, const char *pwd, unsigned int port) {
@@ -36,6 +34,9 @@ MYSQL *BinaryFetcher::_initConn(const char *ip, const char *usr, const char *pwd
 
 void BinaryFetcher::getBinary(int source_index) {
 
+    std::ofstream binlog( module->config->binlog_path + "/" + "binlog" +
+                         std::to_string(source_index) + ".bin", std::ios::binary);
+    binlog.write(reinterpret_cast<const char *>(magic), sizeof(magic));
     MYSQL *conn = _initConn(module->config->sql_ip[source_index].c_str(),
                             module->config->sql_usr[source_index].c_str(),
                             module->config->sql_pwd[source_index].c_str(),
@@ -65,17 +66,19 @@ void BinaryFetcher::getBinary(int source_index) {
             break;
         }
         eventReader.set(rpl.size, rpl.buffer);
-        Event* event = eventReader.process();
-        if(event){
+        Event *event = eventReader.process();
+        if (event) {
             event->_print_header();
             event->_print();
         }
-
+        //if (event->header->type != Log_event_type::ROTATE_EVENT)
+            binlog.write(reinterpret_cast<const char *>(rpl.buffer + 1), (std::streamsize) rpl.size - 1);
         eventCount++;
 
     }
     mysql_binlog_close(conn, &rpl);
     mysql_close(conn);
+    binlog.close();
 }
 
 BinaryFetcher::BinaryFetcher(Module *module) : module(module) {

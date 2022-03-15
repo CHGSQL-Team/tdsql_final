@@ -53,12 +53,14 @@ add_executable(run
         src/logger.cpp
         src/module.cpp
         src/sqlconn.cpp
-        src/binfetch.cpp
-        src/event.cpp
-        src/underlying/event_internal.cpp
-        src/underlying/byte_op.cpp
-        src/binbuffer.cpp
-        src/table_map_event_metadata.cpp
+        src/extfetcher.cpp
+        src/timed.cpp
+#        src/binfetch.cpp
+#        src/event.cpp
+#        src/underlying/event_internal.cpp
+#        src/underlying/byte_op.cpp
+#        src/binbuffer.cpp
+#        src/table_map_event_metadata.cpp
         )
 
 find_library(BOOST_FILESYSTEM NAMES boost_filesystem PATHS thirdparty/boost/lib/ NO_DEFAULT_PATH)

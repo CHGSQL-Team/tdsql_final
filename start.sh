@@ -94,7 +94,9 @@ while true; do
   shift
 done
 
-./SOURCE/build/run \
+cd SOURCE/build
+
+./run \
   $src_a_ip \
   $src_a_port \
   $src_a_user \

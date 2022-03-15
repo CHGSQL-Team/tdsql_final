@@ -19,13 +19,12 @@ Config::Config(char **argv) {
 }
 
 void Config::print_config() const {
-    std::cerr << "Printing configuration ---" << std::endl;
+    std::cerr << "conf ---" << std::endl;
     for (int i = 0; i < 3; i++) {
-        std::cerr << "IP " << i << " is " << sql_ip[i] << std::endl;
-        std::cerr << "Port " << i << " is " << sql_port[i] << std::endl;
-        std::cerr << "Username " << i << " is " << sql_usr[i] << std::endl;
-        std::cerr << "Password " << i << " is " << sql_pwd[i] << std::endl;
-        if (i != 2) std::cerr << "GTID position " << i << " is " << sql_gtid[i] << std::endl;
+        std::cerr << i << ": mysql://" << sql_usr[i] << ":" << sql_pwd[i] << "@" << sql_ip[i] << ":" << sql_port[i]
+                  << " ";
+        if (i != 2) std::cerr << "GTID:" << sql_gtid[i];
+        std::cerr << std::endl;
     }
-    std::cerr << "Configuration ends here ---" << std::endl;
+    std::cerr << "conf ---" << std::endl;
 }

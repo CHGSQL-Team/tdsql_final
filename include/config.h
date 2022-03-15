@@ -11,6 +11,7 @@ public:
     std::string sql_gtid[2];
     std::string log_path = "./logs/";
     std::string tmp_path = "./tmp/";
+    std::string binlog_path = "./tmp/binlogs";
     std::size_t seed = 2022;
 
     int hash_split_threshold = 4000000;
