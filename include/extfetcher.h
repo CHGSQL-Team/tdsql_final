@@ -1,8 +1,10 @@
 #include "module.h"
 #include "mysql.h"
+#include "jvmconn.h"
 
 class ExternalFetcher {
 protected:
+    JVMConn jvmconn;
     Module *module;
 public:
     explicit ExternalFetcher(Module *module);

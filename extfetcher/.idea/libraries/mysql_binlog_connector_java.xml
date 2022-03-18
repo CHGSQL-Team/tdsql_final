@@ -1,9 +1,10 @@
 <component name="libraryTable">
   <library name="mysql-binlog-connector-java">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/libs/mysql-binlog-connector-java.jar!/" />
+      <root url="file://$PROJECT_DIR$/libs" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/libs" recursive="false" />
   </library>
 </component>

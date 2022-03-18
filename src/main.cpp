@@ -9,8 +9,6 @@ int main(int argc, char **argv) {
     Config config(argv);
     config.print_config();
     Module module(&config);
-//    BinaryFetcher binaryFetcher(&module);
-//    binaryFetcher.getBinary(0);
     ExternalFetcher externalFetcher(&module);
     externalFetcher.evokeFetch(0);
 }

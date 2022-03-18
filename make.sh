@@ -12,5 +12,5 @@ echo Building Java Part --------------------------------------------------------
 cd ../extfetcher
 mkdir -p build/production/extfetcher
 cd build
-javac -d ./production/extfetcher -cp .:../libs/mysql-binlog-connector-java.jar: ../src/Main.java ../src/EventDealer.java ../src/FileMain.java ../src/GtidResolver.java
+javac -d ./production/extfetcher -cp .:../libs/mysql-binlog-connector-java.jar: ../src/Main.java ../src/EventDealer.java ../src/FileMain.java ../src/GtidResolver.java ../src/run.java 
 echo Java Build Complete -----------------------------------------------------------

@@ -1,5 +1,6 @@
 #include "extfetcher.h"
 #include "boost/filesystem.hpp"
+#include "jni.h"
 #include <fstream>
 
 const unsigned char magic[] = {0xfe, 0x62, 0x69, 0x6e};
@@ -19,11 +20,10 @@ std::string exec(const char *cmd) {
 
 static void fix_gtid_set(MYSQL_RPL *rpl, unsigned char *packet_gtid_set) {
     auto *gtidSet = (std::vector<unsigned char> *) rpl->gtid_set_arg;
-    memcpy(packet_gtid_set,gtidSet->data(),gtidSet->size());
+    memcpy(packet_gtid_set, gtidSet->data(), gtidSet->size());
 }
 
-ExternalFetcher::ExternalFetcher(Module *module) : module(module) {
-
+ExternalFetcher::ExternalFetcher(Module *module) : module(module), jvmconn(module) {
 }
 
 MYSQL *ExternalFetcher::_initConn(const char *ip, const char *usr, const char *pwd, unsigned int port) {
@@ -53,7 +53,8 @@ MYSQL *ExternalFetcher::_initConn(const char *ip, const char *usr, const char *p
 
 void ExternalFetcher::dumpEventToFile(int index, const std::string &path, std::vector<unsigned char> &gtidSet) {
     std::ofstream binlog(path, std::ios::binary);
-    binlog.write(reinterpret_cast<const char *>(magic), sizeof(magic));
+    std::ofstream event_length(path + "len", std::ios::out);
+    //binlog.write(reinterpret_cast<const char *>(magic), sizeof(magic));
     MYSQL *conn = _initConn(module->config->sql_ip[index].c_str(),
                             module->config->sql_usr[index].c_str(),
                             module->config->sql_pwd[index].c_str(),
@@ -82,12 +83,14 @@ void ExternalFetcher::dumpEventToFile(int index, const std::string &path, std::v
             break;
         }
         binlog.write(reinterpret_cast<const char *>(rpl.buffer + 1), (std::streamsize) rpl.size - 1);
+        event_length << rpl.size - 1 << "\n";
         eventCount++;
 
     }
     mysql_binlog_close(conn, &rpl);
     mysql_close(conn);
     binlog.close();
+    event_length.close();
 }
 
 void ExternalFetcher::evokeFetch(int index) {
@@ -97,21 +100,23 @@ void ExternalFetcher::evokeFetch(int index) {
     std::cerr << "package size = " << gtidPackage.size() << std::endl;
     dumpEventToFile(index, dumpPath.string(), gtidPackage);
 
-    std::system(
-            (std::string(
-                    "java -cp ../extfetcher/build/production/extfetcher:../extfetcher/libs/mysql-binlog-connector-java.jar: FileMain ")
-             + boost::filesystem::absolute(dumpPath).string() + " "
-             + boost::filesystem::absolute(boost::filesystem::path(module->config->binlog_path)).string()).c_str());
+    std::string callArg = boost::filesystem::canonical(dumpPath).string() + " " +
+                          boost::filesystem::canonical(boost::filesystem::path(module->config->binlog_path)).string() +
+                          " " + std::to_string(index);
+//    std::cerr << jvmconn.callMethod("run", "FileMainCall", callArg) << std::endl;
+//    std::system(
+//            (std::string(
+//                    "java -cp ../extfetcher/build/production/extfetcher:../extfetcher/libs/mysql-binlog-connector-java.jar: run file ")
+//             + boost::filesystem::absolute(dumpPath).string() + " "
+//             + boost::filesystem::absolute(boost::filesystem::path(module->config->binlog_path)).string()).c_str());
 
     std::cerr << "Dumping Finished" << std::endl;
     module->timed.printElapsedTime();
 }
 
 std::vector<unsigned char> ExternalFetcher::retrieveGtidPackage(int index) {
-    std::string packageString = exec(
-            (std::string(
-                    "java -cp ../extfetcher/build/production/extfetcher:../extfetcher/libs/mysql-binlog-connector-java.jar: GtidResolver ")
-             + module->config->sql_gtid[index]).c_str());
+    std::string test("test");
+    std::string packageString = jvmconn.callMethod("GtidResolver", "main", module->config->sql_gtid[index]);
     std::stringstream ss(packageString);
     std::vector<unsigned char> gtidPackage;
     unsigned int byteInt;
@@ -119,5 +124,4 @@ std::vector<unsigned char> ExternalFetcher::retrieveGtidPackage(int index) {
         gtidPackage.push_back(byteInt);
     }
     return gtidPackage;
-
 }

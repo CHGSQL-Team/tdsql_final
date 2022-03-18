@@ -30,6 +30,7 @@ set(Boost_INCLUDE_DIRS thirdparty/boost/include)
 set(MYSQLCLIENT_INCLUDE_DIR thirdparty/mysqlclient/include)
 
 include_directories(${Boost_INCLUDE_DIRS} thirdparty/mysql-connector-cpp/include)
+include_directories(/usr/lib/jvm/java-1.8.0/include /usr/lib/jvm/java-1.8.0/include/linux)
 
 find_library(MYSQL_LIBRARIES NAMES mysqlcppconn PATHS thirdparty/mysql-connector-cpp/lib/ NO_DEFAULT_PATH)
 
@@ -37,6 +38,8 @@ find_library(MYSQL_CLIENT_LIBRARIES NAMES mysqlclient PATHS thirdparty/mysqlclie
 
 find_library(SSL NAMES ssl PATHS thirdparty/openssl/lib NO_DEFAULT_PATH)
 find_library(CRYPTO NAMES crypto PATHS thirdparty/openssl/lib NO_DEFAULT_PATH)
+
+find_library(JVM NAMES jvm PATHS /usr/lib/jvm/java-1.8.0/jre/lib/amd64/server)
 
 set(MYSQL_REQ_LIBRARIES ${MYSQL_CLIENT_LIBRARIES} ${MYSQL_LIBRARIES} pthread ${SSL} ${CRYPTO} dl z resolv)
 
@@ -55,6 +58,7 @@ add_executable(run
         src/sqlconn.cpp
         src/extfetcher.cpp
         src/timed.cpp
+        src/jvmconn.cpp
 #        src/binfetch.cpp
 #        src/event.cpp
 #        src/underlying/event_internal.cpp
@@ -71,4 +75,5 @@ find_library(BOOST_CHRONO NAMES boost_chrono PATHS thirdparty/boost/lib/ NO_DEFA
 
 set(Boost_LIBRARIES  ${BOOST_FILESYSTEM} ${BOOST_SYSTEM} ${BOOST_SERIALIZATION}  ${BOOST_CHRONO} ${BOOST_THREAD} )
 
-target_link_libraries(run stdc++ ${Boost_LIBRARIES} ${MYSQL_REQ_LIBRARIES})
+
+target_link_libraries(run stdc++ ${Boost_LIBRARIES} ${MYSQL_REQ_LIBRARIES} ${JVM})
