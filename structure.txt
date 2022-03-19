@@ -1,0 +1,113 @@
+class Table
+
+    String dbName,tableName;
+
+    int colPhy; 表示物理存储中用到第几列;
+
+    Vector <ColumnDescriptor*> colDes; 表示各个列（按实际顺序）
+
+    ColumnDescriptor* updCol; 表示updated_at字段的列
+
+    Unordered_map <String, ColumnDescriptor*> 从列名到Descriptor的映射
+
+    Vector <Row*> rows 用于存储数据行
+
+    Vector <UniqueIndex*> indexs 用于存储唯一索引
+
+    UniqueIndex *priIndex; 当唯一索引不存在时，用于充当临时索引（除update_date外均为主键）
+
+    void addColumn(ColumnDescriptor newCol, String after) / (ColumnDescriptor newCol)
+        根据名称，在colDes的对应位置插入传入的ColumnDescriptor，填上Descriptor的Table*
+        填上ColumnDescriptor的列名映射
+        填上newCol的映射，映射到物理存储列的最后（colPhy++）
+        遍历rows中所有行，将该列的默认值填到data中
+
+    void addUniqueIndex(String name, Set<String> colNames) / (Set<String> colNames)
+        如果priIndex被启用，则将其禁用
+        如果临时索引priIndex不为null，就删除priIndex,并将其设为null
+        根据colNames找到各个列的columnDescriptor,并用此新建UniqueIndex，并进行reCompute
+
+    void dropColumn(String colName)
+        根据名称搜索到ColumnDescriptor*
+        搜索所有的唯一索引，如果有索引包含这个Col的，将这个Col在本索引中删除。如果本索引空了，删除索引。如果索引没被删除，就reCompute
+        删除colDes中的这个列
+        如果表中索引空了，启用priIndex并reCompute
+        删除列名到这个Descriptor的映射
+
+    void dropUniqueIndex(String indexName)
+        搜索indexs,将对应index直接删除
+
+    void changeCol(String colName, ColumnDescriptor newCol)
+        搜索colName,直接替换为newCol（需要记得填充newCol中的一些信息）
+
+
+
+
+class ColumnDescriptor
+
+    int name; 表示该列名称
+
+    int mapping; 表示dat文件中一行的数据应该怎样映射到row的data中。mapping = 3 表示该列数据应该存储到rows.data[3]
+
+    String default; 表示该列的默认值
+
+
+class Row
+
+    Vector <String> data 存储各列数据
+
+    int source; 表示该行是从哪一个源导入的
+
+    int timestamp; 表示该行在该源导入的时间戳
+
+
+class UniqueIndex
+
+    Table* table; 表示这个index属于的表
+
+    String name; Index的名称（默认为随机生成,主键则为__PRIMARYKEY）
+
+    Set <ColumnDescriptor*> 存储这个Index的列集合（按data顺序）
+
+    Unordered_map<hashsize_t, Row*> 存储这个Index的Hash映射
+
+
+    void reCompute();
+        清空Hash映射，遍历表中所有行
+        若在映射中出现key重复，则做如下处理：
+            首先查看map中row的updated_at,若不同，则更新map,删除旧记录，将rows中的旧记录设置为null
+            若updated_at相同，则选择source更小的那个
+            若source也相同，则选择timestamp更小的那个
+
+
+DDL描述 ----------------
+
+创表语句：
+
+CREATE
+表名
+列的数量
+    列名
+    是否为not null
+    是否有默认值
+    [默认值]
+
+索引的数量
+    索引是否有名称
+    [索引名称]
+    是否为主键
+    索引中键的数量
+        索引键名称
+
+改表语句：
+
+ALTER
+    ADDCOL
+    列名
+    是否为not null
+    是否有默认值
+    [默认值]
+    是否指定在某个列之后
+    [某个列]
+    ---
+

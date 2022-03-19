@@ -46,7 +46,10 @@ add_executable(run
         src/timed.cpp
         src/jvmconn.cpp
         src/workloader.cpp
+        src/statement.cpp
         src/worker_impl/worker.cpp
+        src/worker_impl/subworker.cpp
+        src/iohelper.cpp
         )
 
 find_library(BOOST_FILESYSTEM NAMES boost_filesystem PATHS thirdparty/boost/lib/ NO_DEFAULT_PATH)

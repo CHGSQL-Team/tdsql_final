@@ -26,8 +26,21 @@ public class EventDealer {
     }
 
     public void closeAll() throws IOException {
-        for (BufferedWriter writer:
-             tableWriterLookup.values()) {
+        for (ImmutablePair<String,String> key:
+             tableAlterStateLookup.keySet()) {
+            try (BufferedWriter countWriter = new BufferedWriter(getFileWriter(
+                    binlogFolder.resolve(key.left)
+                            .resolve(key.right)
+                            .resolve(index)
+                            .resolve("cnt.txt")
+                            .toFile()
+            ))) {
+                countWriter.write(Integer.toString(tableAlterStateLookup.get(key)));
+            }
+        }
+
+        for (BufferedWriter writer :
+                tableWriterLookup.values()) {
             writer.close();
         }
     }
@@ -49,7 +62,7 @@ public class EventDealer {
     public void dealEventData(RowsLogEvent event) throws IOException {
         AtomicLong sum = new AtomicLong(0);
         String dbName = event.getTable().getDbName();
-        String tableName = event.getTable().getTableName().replace("`","");
+        String tableName = event.getTable().getTableName().replace("`", "");
         String rowText = RowParser.parseRowsEvent(event, sum);
         tableWriterLookup.get(new ImmutablePair<>(dbName, tableName)).write(rowText);
     }
@@ -63,17 +76,17 @@ public class EventDealer {
             SQLCreateTableStatement statement = (SQLCreateTableStatement) statement_;
             String tableName = statement.getTableName().replace("`", "");
 
-            updateTableWriterAndDdlSql(dbName, tableName, statement.toString());
+            updateTableWriterAndDdlSql(dbName, tableName, statement);
         }
 
         if (statement_ instanceof SQLAlterTableStatement) {
             SQLAlterTableStatement statement = (SQLAlterTableStatement) statement_;
             String tableName = statement.getTableName().replace("`", "");
-            updateTableWriterAndDdlSql(dbName, tableName, statement.toString());
+            updateTableWriterAndDdlSql(dbName, tableName, statement);
         }
     }
 
-    private void updateTableWriterAndDdlSql(String dbName, String tableName, String s) throws IOException {
+    private void updateTableWriterAndDdlSql(String dbName, String tableName, SQLStatement statement) throws IOException {
         if (!tableAlterStateLookup.containsKey(new ImmutablePair<>(dbName, tableName))) {
             tableAlterStateLookup.put(new ImmutablePair<>(dbName, tableName), 0);
         } else {
@@ -96,8 +109,15 @@ public class EventDealer {
                         .resolve(tableAlterStateLookup.get(new ImmutablePair<>(dbName, tableName)).toString() + ".ddlsql")
                         .toFile()
         ))) {
-            ddlWriter.write(s);
+            ddlWriter.write(statement.toString());
         }
+        DDLCompatWriter.writeDDLCompat(getFileWriter(
+                binlogFolder.resolve(dbName)
+                        .resolve(tableName)
+                        .resolve(index)
+                        .resolve(tableAlterStateLookup.get(new ImmutablePair<>(dbName, tableName)).toString() + ".ddl")
+                        .toFile()
+        ), statement);
     }
 
 //    private String dealEventData(GtidEventData eventData) {

@@ -22,7 +22,13 @@ void WorkLoader::_loadTable(const boost::filesystem::path &dbPath) const {
         if (boost::filesystem::is_directory(entry)) {
             std::string dbName = entry.path().parent_path().stem().generic_string();
             std::string tableName = entry.path().stem().generic_string();
-            module->works.data[std::make_pair(dbName, tableName)] = new WorkDescriptor(dbName, tableName);
+            boost::filesystem::path stateCountPath = entry.path();
+            stateCountPath.append("/0/cnt.txt");
+            std::ifstream stateCountReader(stateCountPath.c_str());
+            int stateCount;
+            stateCountReader >> stateCount;
+            module->works.data[std::make_pair(dbName, tableName)] = new WorkDescriptor(dbName, tableName, entry,
+                                                                                       stateCount);
         }
     }
 }

@@ -56,7 +56,7 @@ void ExternalFetcher::dumpEventToFile(int index, const std::string &path, std::v
         if (mysql_binlog_fetch(conn, &rpl)) {
             throw std::runtime_error(mysql_error(conn));
         } else if (rpl.size == 0) {
-            std::cerr << "[EXTF] Received " << eventCount << " events." << std::endl;
+            std::cerr << "[ExtF] Received " << eventCount << " events." << std::endl;
             break;
         }
         binlog.write(reinterpret_cast<const char *>(rpl.buffer + 1), (std::streamsize) rpl.size - 1);
@@ -74,7 +74,7 @@ void ExternalFetcher::evokeFetch(int index) {
     boost::filesystem::path eventLenPath(
             module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".binlen");
     std::vector<unsigned char> gtidPackage = std::move(retrieveGtidPackage(index));
-    std::cerr << "[EXTF] GTIDp size = " << gtidPackage.size() << std::endl;
+    std::cerr << "[ExtF] GTIDp size = " << gtidPackage.size() << std::endl;
     dumpEventToFile(index, dumpPath.string(), gtidPackage);
 
 
@@ -85,7 +85,7 @@ void ExternalFetcher::evokeFetch(int index) {
 
     jvmconn.callMethod("Entry", "canalSplit", callArg, "(Ljava/lang/String;)V", false);
 
-    std::cerr << "[EXTF] Src " << index << " Finished" << std::endl;
+    std::cerr << "[ExtF] Src " << index << " Finished" << std::endl;
     module->timed.printElapsedTime();
 }
 

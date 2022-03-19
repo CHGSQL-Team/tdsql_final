@@ -50,6 +50,7 @@ JVMConn::JVMConn(Module *module) : module(module) {
 
 JVMConn::~JVMConn() {
     vm->DestroyJavaVM();
+
 }
 
 std::string
@@ -64,7 +65,7 @@ JVMConn::callMethod(const char *className, const char *methodName, std::string &
         throw std::runtime_error(std::string("JVM ERROR no class ") + className);
     }
     std::string ret;
-    std::cerr << "[JVMC] Call " << className << " " << methodName << " " << std::endl;
+    std::cerr << "[JvmC] Call " << className << " " << methodName << " " << std::endl;
     jmethodID jmethodId = env->GetStaticMethodID(clazz, methodName,
                                                  methodSign);
     if (jmethodId == nullptr) {

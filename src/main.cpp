@@ -2,6 +2,7 @@
 #include "module.h"
 #include "extfetcher.h"
 #include "workloader.h"
+#include "worker_impl/worker.h"
 
 int main(int argc, char **argv) {
     Config config(argv);
@@ -11,4 +12,6 @@ int main(int argc, char **argv) {
     WorkLoader workLoader(&module);
     workLoader.loadWorks();
     workLoader.printWorks();
+    Worker worker(&module);
+    worker.work();
 }

@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <boost/serialization/split_member.hpp>
+#include "boost/serialization/split_member.hpp"
+#include "boost/filesystem.hpp"
 
 
 class Column;
@@ -15,9 +16,14 @@ public:
     friend class boost::serialization::access;
 
     std::string db_name, table_name;
+
+    boost::filesystem::path binlogPath;
+
     TableDescriptor *table;
 
-    WorkDescriptor(std::string _db_name, std::string _table_name);
+    int stateCount;
+
+    WorkDescriptor(std::string _db_name, std::string _table_name, boost::filesystem::path binlogPath, int stateCount);
 
     WorkDescriptor();
 
