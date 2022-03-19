@@ -3,7 +3,6 @@ import com.taobao.tddl.dbsync.binlog.*;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Scanner;
 
 public class CanalSplitter {
@@ -17,6 +16,13 @@ public class CanalSplitter {
     }
 
     public static void main(String[] args) throws IOException {
+
+        doSplit(args[0], args[1], args[2], args[3]);
+    }
+
+    public static void portal(String arg) throws IOException {
+
+        String[] args = arg.split(" ");
         doSplit(args[0], args[1], args[2], args[3]);
     }
 
@@ -27,6 +33,7 @@ public class CanalSplitter {
         Scanner lenReader = new Scanner(eventLenFile);
         eventDealer = new EventDealer(binlogPath, sourceIndex);
         BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(eventBinFile));
+
         while (lenReader.hasNextInt()) {
             int eventLength = lenReader.nextInt();
             byte[] eventByte = new byte[eventLength];

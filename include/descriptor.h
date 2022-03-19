@@ -14,11 +14,10 @@ class WorkDescriptor {
 public:
     friend class boost::serialization::access;
 
-    std::vector<std::string> sources;
     std::string db_name, table_name;
     TableDescriptor *table;
 
-    WorkDescriptor(std::vector<std::string> _sources, std::string _db_name, std::string _table_name);
+    WorkDescriptor(std::string _db_name, std::string _table_name);
 
     WorkDescriptor();
 
@@ -60,27 +59,10 @@ public:
 
 class TableDescriptor {
 public:
-    std::string name;
-    std::vector<Column *> cols;
-    std::vector<Column *> primary_keys;
-    std::string insert_header;
 
-    ~TableDescriptor();
-
-    template<typename Archive>
-    void serialize(Archive &ar, unsigned int version);
 };
 
 class Column {
 public:
-    // Column with **NOT NULL and UNIQUE** will be considered is_primary! (that is the MySQL's idiom)
-    // Column with UNIQUE but without NOT NULL will be only considered is_unique
-    std::string name;
-    bool is_unique;
-    bool is_not_null;
-    bool is_primary;
-    std::string data_type;
 
-    template<typename Archive>
-    void serialize(Archive &ar, unsigned int version);
 };

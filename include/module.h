@@ -17,16 +17,12 @@ public:
     SQLPool *sqlPool;
     Logger *logger;
     Timed timed;
-    boost::asio::thread_pool *subworkerPool;
-    boost::asio::thread_pool *hasherPool;
-    boost::asio::thread_pool *reducerPool;
-    boost::asio::thread_pool *pusherPool;
     Works works;
     std::map<unsigned int, TableDescriptor *> tables;
 
     explicit Module(Config *_config);
 
-    void _init();
+    void _init() const;
 
     ~Module();
 };

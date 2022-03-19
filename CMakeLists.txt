@@ -11,16 +11,6 @@ macro(use_cxx17)
     endif ()
 endmacro(use_cxx17)
 
-macro(use_cxx11)
-    if (CMAKE_VERSION VERSION_LESS "3.1")
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-        endif ()
-    else ()
-        set (CMAKE_CXX_STANDARD 11)
-    endif ()
-endmacro(use_cxx11)
-
 use_cxx17()
 
 include_directories(include)
@@ -43,10 +33,6 @@ find_library(JVM NAMES jvm PATHS /usr/lib/jvm/java-1.8.0/jre/lib/amd64/server)
 
 set(MYSQL_REQ_LIBRARIES ${MYSQL_CLIENT_LIBRARIES} ${MYSQL_LIBRARIES} pthread ${SSL} ${CRYPTO} dl z resolv)
 
-#set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/mysql-connector-cpp/;${CMAKE_MODULE_PATH})
-#find_package(MySQL REQUIRED)
-#include_directories(${MYSQL_INCLUDE_DIR})
-
 include_directories(${MYSQLCLIENT_INCLUDE_DIR})
 
 add_executable(run
@@ -59,12 +45,8 @@ add_executable(run
         src/extfetcher.cpp
         src/timed.cpp
         src/jvmconn.cpp
-#        src/binfetch.cpp
-#        src/event.cpp
-#        src/underlying/event_internal.cpp
-#        src/underlying/byte_op.cpp
-#        src/binbuffer.cpp
-#        src/table_map_event_metadata.cpp
+        src/workloader.cpp
+        src/worker_impl/worker.cpp
         )
 
 find_library(BOOST_FILESYSTEM NAMES boost_filesystem PATHS thirdparty/boost/lib/ NO_DEFAULT_PATH)
@@ -74,6 +56,5 @@ find_library(BOOST_THREAD NAMES boost_thread PATHS thirdparty/boost/lib/ NO_DEFA
 find_library(BOOST_CHRONO NAMES boost_chrono PATHS thirdparty/boost/lib/ NO_DEFAULT_PATH)
 
 set(Boost_LIBRARIES  ${BOOST_FILESYSTEM} ${BOOST_SYSTEM} ${BOOST_SERIALIZATION}  ${BOOST_CHRONO} ${BOOST_THREAD} )
-
 
 target_link_libraries(run stdc++ ${Boost_LIBRARIES} ${MYSQL_REQ_LIBRARIES} ${JVM})

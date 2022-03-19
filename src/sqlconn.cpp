@@ -38,24 +38,24 @@ SQLInstance::~SQLInstance() {
 }
 
 void SQLInstance::insertRows(TableDescriptor *table, std::vector<std::string> &data) {
-    if (data.empty()) return;
-    std::string sql_query = table->insert_header;
-    sql_query += "VALUES ";
-    for (const auto &row: data) {
-        sql_query += "(";
-        std::vector<std::string> values;
-        boost::split(values, row, boost::is_any_of(","));
-        for (const auto &value: values) {
-            sql_query += '\"' + value + '\"';
-            if (value != values.back()) sql_query += ",";
-        }
-        sql_query += ")";
-        if (row != data.back()) sql_query += ",";
-    }
-    sql::Statement *stmt;
-    stmt = con->createStatement();
-    stmt->executeUpdate(sql_query);
-    delete stmt;
+//    if (data.empty()) return;
+//    std::string sql_query = table->insert_header;
+//    sql_query += "VALUES ";
+//    for (const auto &row: data) {
+//        sql_query += "(";
+//        std::vector<std::string> values;
+//        boost::split(values, row, boost::is_any_of(","));
+//        for (const auto &value: values) {
+//            sql_query += '\"' + value + '\"';
+//            if (value != values.back()) sql_query += ",";
+//        }
+//        sql_query += ")";
+//        if (row != data.back()) sql_query += ",";
+//    }
+//    sql::Statement *stmt;
+//    stmt = con->createStatement();
+//    stmt->executeUpdate(sql_query);
+//    delete stmt;
 
 }
 

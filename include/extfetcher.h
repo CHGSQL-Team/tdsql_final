@@ -17,4 +17,6 @@ public:
 
     std::vector<unsigned char> retrieveGtidPackage(int index);
 
+    void evokeFetchAll(int start,int end);
+
 };

@@ -1,5 +1,6 @@
 #include "jvmconn.h"
 #include "boost/filesystem.hpp"
+#include "boost/range/iterator_range.hpp"
 
 bool JVMConn::GetJniEnv(JavaVM *vm_, JNIEnv **env_) {
     bool did_attach_thread = false;
@@ -18,15 +19,22 @@ bool JVMConn::GetJniEnv(JavaVM *vm_, JNIEnv **env_) {
     return did_attach_thread;
 }
 
+std::string JVMConn::fetchAllLibs() {
+    std::string ret;
+    boost::filesystem::path pth(module->config->jar_path);
+    for (auto &entry: boost::make_iterator_range(boost::filesystem::directory_iterator(pth), {}))
+        ret += boost::filesystem::canonical(entry.path()).string() + ":";
+    return ret;
+};
+
 JVMConn::JVMConn(Module *module) : module(module) {
 
-    boost::filesystem::path class_path(module->config->class_path), connector_jar_path(
-            module->config->connector_jar_path),
-            lang3_jar_path(module->config->lang3_jar_path);
+    std::string class_path_str = boost::filesystem::canonical(module->config->class_path).string();
+    std::string jar_path_str = fetchAllLibs();
 
-    std::string option_str = std::string("-Djava.class.path=") + boost::filesystem::canonical(class_path).string() + ":"
-                             + boost::filesystem::canonical(connector_jar_path).string() + ":" +
-                             boost::filesystem::canonical(lang3_jar_path).string();
+
+    std::string option_str =
+            std::string("-Djava.class.path=") + class_path_str + ":" + fetchAllLibs();
     char *option_cstr = new char[option_str.size() + 1];
     memset(option_cstr, 0, option_str.size() + 1);
     memcpy(option_cstr, option_str.c_str(), option_str.size());
@@ -44,27 +52,34 @@ JVMConn::~JVMConn() {
     vm->DestroyJavaVM();
 }
 
-std::string JVMConn::callMethod(const char *className, const char *methodName, std::string &arg) {
+std::string
+JVMConn::callMethod(const char *className, const char *methodName, std::string &arg, const char *methodSign,
+                    bool haveResult) {
     JNIEnv *my_env;
     jstring jstr = env->NewStringUTF(arg.c_str());
 
     jclass clazz = env->FindClass(className);
+
+    if (clazz == nullptr) {
+        throw std::runtime_error(std::string("JVM ERROR no class ") + className);
+    }
     std::string ret;
-    std::cerr << "Calling " << className << " " << methodName << " " << arg << std::endl;
+    std::cerr << "[JVMC] Call " << className << " " << methodName << " " << std::endl;
     jmethodID jmethodId = env->GetStaticMethodID(clazz, methodName,
-                                                 "(Ljava/lang/String;)Ljava/lang/String;");
+                                                 methodSign);
     if (jmethodId == nullptr) {
-        std::cerr << "ERROR NO METHOD!" << std::endl;
+        throw std::runtime_error("JVM ERROR no method");
     }
 
     jobject result = env->CallObjectMethod(clazz, jmethodId, jstr);
     if (env->ExceptionCheck()) env->ExceptionDescribe();
 
-    const char *str = env->GetStringUTFChars((jstring) result, nullptr);
-
-    ret.assign(str);
-    env->ReleaseStringUTFChars((jstring) result, str);
-
-
+    if (haveResult) {
+        const char *str = env->GetStringUTFChars((jstring) result, nullptr);
+        ret.assign(str);
+        env->ReleaseStringUTFChars((jstring) result, str);
+    }
     return ret;
+
+
 }

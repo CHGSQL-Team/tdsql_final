@@ -1,14 +1,14 @@
-#include <iostream>
 #include "config.h"
 #include "module.h"
 #include "extfetcher.h"
-#include "binfetch.h"
-#include "jdbc/cppconn/driver.h"
+#include "workloader.h"
 
 int main(int argc, char **argv) {
     Config config(argv);
-    config.print_config();
     Module module(&config);
-    ExternalFetcher externalFetcher(&module);
-    externalFetcher.evokeFetch(0);
+    ExternalFetcher extFetcher(&module);
+    extFetcher.evokeFetchAll(0, 0);
+    WorkLoader workLoader(&module);
+    workLoader.loadWorks();
+    workLoader.printWorks();
 }

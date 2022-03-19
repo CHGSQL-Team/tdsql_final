@@ -14,8 +14,7 @@ public:
     std::string binlog_path = "./tmp/binlogs/";
     std::size_t seed = 2022;
     std::string class_path = "../extfetcher/build/production/extfetcher";
-    std::string connector_jar_path = "../extfetcher/libs/mysql-binlog-connector-java.jar";
-    std::string lang3_jar_path = "../extfetcher/libs/commons-lang3-3.12.0.jar";
+    std::string jar_path = "../extfetcher/libs/";
 
     int hash_split_threshold = 4000000;
     int push_split_threshold = 10000;
