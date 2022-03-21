@@ -5,11 +5,13 @@
 #include <map>
 #include "boost/serialization/split_member.hpp"
 #include "boost/filesystem.hpp"
+#include "table.h"
 
 
-class Column;
+class ColumnDescriptor;
 
-class TableDescriptor;
+class Table;
+
 
 class WorkDescriptor {
 public:
@@ -19,7 +21,7 @@ public:
 
     boost::filesystem::path binlogPath;
 
-    TableDescriptor *table;
+    Table *table;
 
     int stateCount;
 
@@ -63,12 +65,11 @@ public:
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
-class TableDescriptor {
+class ColumnDescriptor {
 public:
+    ColumnDescriptor(std::string name, std::string *def);
 
-};
-
-class Column {
-public:
-
+    std::string name;
+    int mapping = -1;
+    std::string *def = nullptr;
 };

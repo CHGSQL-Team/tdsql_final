@@ -1,6 +1,7 @@
 #pragma once
 
 #include "boost/filesystem.hpp"
+#include "table.h"
 
 #include <string>
 #include <vector>
@@ -17,7 +18,6 @@ enum class AlterType {
 
 class Statement {
 public:
-
 };
 
 class ColumnStatement;
@@ -33,6 +33,7 @@ public:
     std::vector<IndexStatement> indexs;
 
     void print();
+    void fillToTable(Table* table);
 };
 
 class ColumnStatement {
@@ -59,5 +60,5 @@ class AlterAddColStatement : public AlterStatement {
 public:
     AlterAddColStatement();
     ColumnStatement col;
-    std::string insAfter;
+    std::string* insAfter;
 };

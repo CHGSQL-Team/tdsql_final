@@ -1,10 +1,15 @@
-#include "statement.h"
-#include "iohelper.h"
+#include "structure/statement.h"
+#include "utils/iohelper.h"
 #include <fstream>
 #include <iostream>
 
 CreateTableStatement::CreateTableStatement(const boost::filesystem::path &path) {
     std::ifstream input(path.c_str());
+    std::ifstream dbgInput(path.parent_path().append("/0.ddlsql").c_str());
+    IOHelper dbgHelper(&dbgInput);
+    std::cerr << "Printing Create Table Statement\n-----" << std::endl << dbgHelper.getEntireFile() << std::endl
+              << "-----"
+              << std::endl;
 
     IOHelper helper(&input);
     std::string type, tableName;
@@ -58,6 +63,14 @@ void CreateTableStatement::print() {
 
 
 }
+
+void CreateTableStatement::fillToTable(Table *table) {
+    for (const auto &col: cols) {
+        auto *newColDes = new ColumnDescriptor(col.name, col.defaultStr);
+        table->addColumn(newColDes, nullptr);
+    }
+}
+
 
 AlterAddColStatement::AlterAddColStatement() : AlterStatement() {
 

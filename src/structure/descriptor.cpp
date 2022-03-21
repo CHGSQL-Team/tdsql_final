@@ -1,4 +1,4 @@
-#include "descriptor.h"
+#include "structure/descriptor.h"
 
 #include <utility>
 
@@ -11,3 +11,6 @@ WorkDescriptor::WorkDescriptor(std::string _db_name, std::string _table_name, bo
 WorkDescriptor::~WorkDescriptor() {
 }
 
+ColumnDescriptor::ColumnDescriptor(std::string name, std::string* def) : name(std::move(name)), def(def) {
+
+}

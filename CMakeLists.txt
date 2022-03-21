@@ -38,18 +38,20 @@ include_directories(${MYSQLCLIENT_INCLUDE_DIR})
 add_executable(run
         src/main.cpp
         src/config.cpp
-        src/descriptor.cpp
-        src/logger.cpp
-        src/module.cpp
-        src/sqlconn.cpp
-        src/extfetcher.cpp
-        src/timed.cpp
-        src/jvmconn.cpp
-        src/workloader.cpp
-        src/statement.cpp
+        src/structure/descriptor.cpp
+        src/utils/logger.cpp
+        src/structure/module.cpp
+        src/external/sqlconn.cpp
+        src/external/extfetcher.cpp
+        src/utils/timed.cpp
+        src/external/jvmconn.cpp
+        src/utils/workloader.cpp
+        src/structure/statement.cpp
         src/worker_impl/worker.cpp
         src/worker_impl/subworker.cpp
-        src/iohelper.cpp
+        src/utils/iohelper.cpp
+        src/structure/table.cpp
+        src/utils/datparser.cpp
         )
 
 find_library(BOOST_FILESYSTEM NAMES boost_filesystem PATHS thirdparty/boost/lib/ NO_DEFAULT_PATH)

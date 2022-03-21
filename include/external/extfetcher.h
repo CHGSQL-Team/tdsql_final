@@ -1,6 +1,6 @@
-#include "module.h"
+#include "structure/module.h"
 #include "mysql.h"
-#include "jvmconn.h"
+#include "external/jvmconn.h"
 
 class ExternalFetcher {
 protected:

@@ -1,4 +1,4 @@
-#include "timed.h"
+#include "utils/timed.h"
 #include <iostream>
 
 Timed::Timed() {

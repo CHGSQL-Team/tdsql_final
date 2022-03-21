@@ -1,8 +1,8 @@
 #include <string>
 #include <boost/filesystem.hpp>
 #include <map>
-#include "module.h"
-#include "descriptor.h"
+#include "structure/module.h"
+#include "structure/descriptor.h"
 
 
 class WorkLoader {

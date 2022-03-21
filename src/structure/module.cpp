@@ -1,4 +1,4 @@
-#include "module.h"
+#include "structure/module.h"
 #include <boost/filesystem.hpp>
 
 

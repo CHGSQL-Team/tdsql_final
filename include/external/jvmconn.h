@@ -5,7 +5,7 @@ extern "C" {
 }
 
 #include <string>
-#include "module.h"
+#include "structure/module.h"
 
 class JVMConn {
 private:

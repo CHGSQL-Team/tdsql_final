@@ -1,10 +1,10 @@
 #pragma once
 
-#include "descriptor.h"
+#include "structure/descriptor.h"
 #include "config.h"
-#include "sqlconn.h"
-#include "logger.h"
-#include "timed.h"
+#include "external/sqlconn.h"
+#include "utils/logger.h"
+#include "utils/timed.h"
 #include <map>
 #include <vector>
 #include <boost/asio/io_service.hpp>
@@ -18,7 +18,6 @@ public:
     Logger *logger;
     Timed timed;
     Works works;
-    std::map<unsigned int, TableDescriptor *> tables;
 
     explicit Module(Config *_config);
 

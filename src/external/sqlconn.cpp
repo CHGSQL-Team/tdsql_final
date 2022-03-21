@@ -1,4 +1,4 @@
-#include "sqlconn.h"
+#include "external/sqlconn.h"
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -37,7 +37,7 @@ SQLInstance::~SQLInstance() {
     pool->poolMutex.unlock();
 }
 
-void SQLInstance::insertRows(TableDescriptor *table, std::vector<std::string> &data) {
+//void SQLInstance::insertRows(TableDescriptor *table, std::vector<std::string> &data) {
 //    if (data.empty()) return;
 //    std::string sql_query = table->insert_header;
 //    sql_query += "VALUES ";
@@ -56,8 +56,7 @@ void SQLInstance::insertRows(TableDescriptor *table, std::vector<std::string> &d
 //    stmt = con->createStatement();
 //    stmt->executeUpdate(sql_query);
 //    delete stmt;
-
-}
+//}
 
 void SQLInstance::setAutoCommit(bool value) {
     con->setAutoCommit(value);

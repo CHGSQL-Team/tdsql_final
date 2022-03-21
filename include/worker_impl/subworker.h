@@ -1,6 +1,6 @@
 #pragma once
 
-#include "module.h"
+#include "structure/module.h"
 #include <string>
 
 class SubWorker {

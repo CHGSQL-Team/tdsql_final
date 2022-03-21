@@ -1,4 +1,4 @@
-#include "jvmconn.h"
+#include "external/jvmconn.h"
 #include "boost/filesystem.hpp"
 #include "boost/range/iterator_range.hpp"
 

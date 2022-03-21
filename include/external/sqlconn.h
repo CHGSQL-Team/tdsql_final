@@ -7,7 +7,7 @@
 #include "jdbc/cppconn/prepared_statement.h"
 #include <string>
 #include "config.h"
-#include "descriptor.h"
+#include "structure/descriptor.h"
 #include <list>
 #include <mutex>
 
@@ -44,7 +44,7 @@ public:
 
     void executeRaw(const std::string &content);
 
-    void insertRows(TableDescriptor *table, std::vector<std::string> &data);
+//    void insertRows(TableDescriptor *table, std::vector<std::string> &data);
 
     sql::Connection *getConnection();
 

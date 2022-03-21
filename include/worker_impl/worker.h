@@ -1,5 +1,5 @@
 #pragma once
-#include "module.h"
+#include "structure/module.h"
 
 class Worker {
 private:
