@@ -37,7 +37,7 @@ include_directories(${MYSQLCLIENT_INCLUDE_DIR})
 
 add_executable(run
         src/main.cpp
-        src/config.cpp
+        src/structure/config.cpp
         src/structure/descriptor.cpp
         src/utils/logger.cpp
         src/structure/module.cpp

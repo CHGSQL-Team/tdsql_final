@@ -1,4 +1,4 @@
-#include "config.h"
+#include "structure/config.h"
 #include "structure/module.h"
 #include "external/extfetcher.h"
 #include "utils/workloader.h"

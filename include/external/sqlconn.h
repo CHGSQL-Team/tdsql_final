@@ -6,7 +6,7 @@
 #include "jdbc/cppconn/statement.h"
 #include "jdbc/cppconn/prepared_statement.h"
 #include <string>
-#include "config.h"
+#include "structure/config.h"
 #include "structure/descriptor.h"
 #include <list>
 #include <mutex>

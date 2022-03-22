@@ -1,4 +1,4 @@
-#include "config.h"
+#include "structure/config.h"
 #include <cstring>
 #include <iostream>
 
