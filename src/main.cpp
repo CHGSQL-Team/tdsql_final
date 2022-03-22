@@ -9,8 +9,8 @@ int main(int argc, char **argv) {
     Module module(&config);
     // Need to detach JVM
     {
-//        ExternalFetcher extFetcher(&module);
-//        extFetcher.evokeFetchAll(0, 1);
+        ExternalFetcher extFetcher(&module);
+        extFetcher.evokeFetchAll(0, 1);
     }
     WorkLoader workLoader(&module);
     workLoader.loadWorks();

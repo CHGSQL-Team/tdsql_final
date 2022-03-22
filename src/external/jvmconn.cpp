@@ -49,10 +49,7 @@ JVMConn::JVMConn(Module *module) : module(module) {
 }
 
 JVMConn::~JVMConn() {
-    std::cout<<"[JvmC] DETACHING JVM!"<<std::endl;
-    vm->DetachCurrentThread();
     vm->DestroyJavaVM();
-
 }
 
 std::string

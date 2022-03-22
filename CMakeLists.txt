@@ -52,6 +52,7 @@ add_executable(run
         src/utils/iohelper.cpp
         src/structure/table.cpp
         src/utils/datparser.cpp
+        src/utils/uniformlog.cpp
         )
 
 find_library(BOOST_FILESYSTEM NAMES boost_filesystem PATHS thirdparty/boost/lib/ NO_DEFAULT_PATH)

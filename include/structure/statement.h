@@ -64,6 +64,8 @@ public:
                                              const boost::filesystem::path &sqlpath);
 
     virtual void print() = 0;
+
+    virtual void fillToTable(Table* table) = 0;
 };
 
 class AlterAddColStatement : public AlterStatement {
@@ -74,4 +76,15 @@ public:
     std::string *insAfter;
 
     void print() override;
+
+    void fillToTable(Table* table) override;
+};
+
+class AlterNothingStatement : public AlterStatement {
+public:
+    AlterNothingStatement();
+
+    void print() override;
+
+    void fillToTable(Table* table) override;
 };

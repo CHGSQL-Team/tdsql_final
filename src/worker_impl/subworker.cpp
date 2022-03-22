@@ -14,21 +14,21 @@ void SubWorker::work() {
                   << std::endl;
         if (state == 0) initialTrace();
         else alterTrace(state);
-//        for (int source = 0; source < 2; source++) {
-//            DATParser datParser(workDes->binlogPath / std::to_string(source) / (std::to_string(state) + ".dat"), source,
-//                                stamp[source], workDes->table);
-////            std::vector<Row *> newRows = std::move(datParser.parseData());
-//
-////            workDes->table.
-////            std::cout << "Printing new rows" << std::endl;
-////            for (const auto &row: newRows) {
-////                for (const auto &col: row->data) {
-////                    std::cout << col << ",";
-////                }
-////                std::cout << std::endl;
-////            }
-//        }
-//        workDes->table->print(10);
+        for (int source = 0; source < 2; source++) {
+            DATParser datParser(workDes->binlogPath / std::to_string(source) / (std::to_string(state) + ".dat"), source,
+                                stamp[source], workDes->table);
+//            std::vector<Row *> newRows = std::move(datParser.parseData());
+
+//            workDes->table.
+//            std::cout << "Printing new rows" << std::endl;
+//            for (const auto &row: newRows) {
+//                for (const auto &col: row->data) {
+//                    std::cout << col << ",";
+//                }
+//                std::cout << std::endl;
+//            }
+        }
+        workDes->table->print(10);
     }
 }
 

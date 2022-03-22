@@ -22,13 +22,12 @@ public:
     std::unordered_map<std::string, ColumnDescriptor *> nameToColDes;
     std::vector<Row *> rows;
     std::vector<UniqueIndex *> indexs;
-    UniqueIndex *priIndex = nullptr;
 
     explicit Table(WorkDescriptor *workDes);
 
     void addColumn(ColumnDescriptor *newCol, std::string *after);
 
-    void addUniqueIndex(std::string name, std::set<std::string> colNames);
+    void addUniqueIndex(const std::string& name, const std::set<std::string>& colNames, bool isPrimary);
 
     void dropColumn(std::string colName);
 
@@ -38,11 +37,11 @@ public:
 
     void insertRows(std::vector<Row *> &newRows);
 
-    void insertRow(Row* newRow);
+    void insertRow(Row *newRow);
 
     void print(int trunc);
 
-    void getInsPhyArray(int* array);
+    void getInsPhyArray(int *array);
 };
 
 class UniqueIndex {
@@ -51,8 +50,18 @@ public:
     std::string name;
     std::set<ColumnDescriptor *> cols;
     std::unordered_map<size_t, Row *> hash;
+    bool isPrimary;
+    bool isTemp;
+    int *hashPhy = nullptr;
+
+    UniqueIndex(Table *table, std::string name, const std::set<std::string>& colStrs, bool isPrimary);
 
     void reCompute();
+
+    int checkRow(Row *row);
+
+    // Get temporary index
+    explicit UniqueIndex(Table *table);
 };
 
 class Row {

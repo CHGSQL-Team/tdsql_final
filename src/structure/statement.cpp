@@ -3,15 +3,18 @@
 #include <fstream>
 #include <iostream>
 #include <utility>
+#include "utils/uniformlog.h"
 
 CreateTableStatement::CreateTableStatement(const boost::filesystem::path &path,
                                            const boost::filesystem::path &sqlpath) {
     std::ifstream input(path.c_str());
     std::ifstream dbgInput(sqlpath.c_str());
     IOHelper dbgHelper(&dbgInput);
-    std::cout << "Printing Create Table Statement\n-----" << std::endl << dbgHelper.getEntireFile() << std::endl
-              << "-----"
-              << std::endl;
+    {
+        UniformLog log("Create Table Statement");
+        std::cout << dbgHelper.getEntireFile() << std::endl;
+    }
+
 
     IOHelper helper(&input);
     std::string type, tableName;
@@ -43,11 +46,10 @@ CreateTableStatement::CreateTableStatement(const boost::filesystem::path &path,
         }
         indexs.push_back({idxName, static_cast<bool>(isPrimary), std::move(keys)});
     }
-
 }
 
 void CreateTableStatement::print() {
-    std::cout << "[Creat Stat] " << "Name: " << name << std::endl;
+    UniformLog log("Create Table Statement", name);
     for (const auto &col: cols) {
         std::cout << "Col: " << col.name << (col.isNotNull ? " NOT NULL " : " CAN NULL ");
         if (col.defaultStr) std::cout << " Def: " << *col.defaultStr;
@@ -62,14 +64,18 @@ void CreateTableStatement::print() {
         }
         std::cout << std::endl;
     }
-
-
 }
 
 void CreateTableStatement::fillToTable(Table *table) {
     for (const auto &col: cols) {
         auto *newColDes = new ColumnDescriptor(col.name, col.defaultStr);
         table->addColumn(newColDes, nullptr);
+    }
+    for (const auto &index: indexs) {
+        table->indexs.push_back(new UniqueIndex(table, index.name, index.keys, index.isPrimaryKey));
+    }
+    if (indexs.empty()) {
+        table->indexs.push_back(new UniqueIndex(table));
     }
 }
 
@@ -79,13 +85,14 @@ AlterStatement::getAlterStatement(const boost::filesystem::path &path, const boo
     std::ifstream input(path.c_str());
     std::ifstream dbgInput(sqlpath.c_str());
     IOHelper dbgHelper(&dbgInput);
-    std::cout << "Printing Alter Table Statement\n-----" << std::endl << dbgHelper.getEntireFile() << std::endl
-              << "-----"
-              << std::endl;
+    {
+        UniformLog log("Alter Table Statement");
+        std::cout << dbgHelper.getEntireFile() << std::endl;
+    }
 
     IOHelper helper(&input);
     std::string OpStr = helper.getLine();
-    if(OpStr!="ALTER") throw std::runtime_error("Not an alter statement!");
+    if (OpStr != "ALTER") throw std::runtime_error("Not an alter statement!");
     std::string typeStr = helper.getLine();
     if (typeStr == "ADDCOL") {
         std::string colName = helper.getLine();
@@ -100,6 +107,8 @@ AlterStatement::getAlterStatement(const boost::filesystem::path &path, const boo
             after = new std::string(helper.getLine());
         ColumnStatement colStat{colName, static_cast<bool>(isNotNull), def};
         return new AlterAddColStatement(colStat, after);
+    } else if (typeStr == "NOTHING") {
+        return new AlterNothingStatement();
     }
     return nullptr;
 }
@@ -114,10 +123,14 @@ AlterAddColStatement::AlterAddColStatement(ColumnStatement colStat, std::string 
 }
 
 void AlterAddColStatement::print() {
-    std::cout << "Printing AlterAddColStatement" << std::endl;
+    UniformLog log("AlterAddColStatement");
     std::cout << "New column: " << std::endl;
     colStat.print();
     if (insAfter) std::cout << "Insert after: " << *insAfter << std::endl;
+
+}
+
+void AlterAddColStatement::fillToTable(Table *table) {
 
 }
 
@@ -127,4 +140,16 @@ void ColumnStatement::print() const {
         std::cout << ", Default:" << *defaultStr;
     }
     std::cout << std::endl;
+}
+
+void AlterNothingStatement::print() {
+    UniformLog log("AlterNothingColStatement");
+}
+
+AlterNothingStatement::AlterNothingStatement() : AlterStatement(AlterType::NOTHING) {
+
+}
+
+void AlterNothingStatement::fillToTable(Table *table) {
+    // Do nothing
 }
