@@ -7,8 +7,11 @@
 int main(int argc, char **argv) {
     Config config(argv);
     Module module(&config);
-    ExternalFetcher extFetcher(&module);
-    extFetcher.evokeFetchAll(0, 0);
+    // Need to detach JVM
+    {
+//        ExternalFetcher extFetcher(&module);
+//        extFetcher.evokeFetchAll(0, 1);
+    }
     WorkLoader workLoader(&module);
     workLoader.loadWorks();
     workLoader.printWorks();

@@ -36,7 +36,13 @@ public:
 
     void changeCol(std::string colName, ColumnDescriptor *newCol);
 
+    void insertRows(std::vector<Row *> &newRows);
+
+    void insertRow(Row* newRow);
+
     void print(int trunc);
+
+    void getInsPhyArray(int* array);
 };
 
 class UniqueIndex {
@@ -49,9 +55,11 @@ public:
     void reCompute();
 };
 
-class Row{
+class Row {
 public:
+    Row(std::vector<std::string> &&data, int source, int stamp);
+
     std::vector<std::string> data;
     int source;
-    time_t timestamp;
+    int stamp;
 };

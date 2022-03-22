@@ -25,7 +25,7 @@ MYSQL *BinaryFetcher::_initConn(const char *ip, const char *usr, const char *pwd
     if (mysql_query(conn,
                     "SET @master_binlog_checksum = 'NONE', "
                     "@source_binlog_checksum = 'NONE'")) {
-        std::cerr <<
+        std::cout <<
                   "Could not notify source server about checksum awareness."
                   "Server returned " << mysql_error(conn);
     }
@@ -62,7 +62,7 @@ void BinaryFetcher::getBinary(int source_index) {
         if (mysql_binlog_fetch(conn, &rpl)) {
             throw std::runtime_error(mysql_error(conn));
         } else if (rpl.size == 0) {
-            std::cerr << "EOF event received. Actually received " << eventCount << " events." << std::endl;
+            std::cout << "EOF event received. Actually received " << eventCount << " events." << std::endl;
             break;
         }
         eventReader.set(rpl.size, rpl.buffer);

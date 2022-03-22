@@ -133,12 +133,12 @@ SQLInstance *SQLPool::getSQLInstance() {
         poolMutex.unlock();
         newConnection = driver->connect("config->sql_url", "config->sql_username", "config->sql_password"); // FIXME
         newInstance = new SQLInstance(newConnection, this);
-        std::cerr << "BAD PERFORMANCE: Creating new SQL connection!" << std::endl;
+        std::cout << "BAD PERFORMANCE: Creating new SQL connection!" << std::endl;
     } else {
         newInstance = new SQLInstance(availConnection.front(), this);
         newInstance->getConnection()->setAutoCommit(true);
         availConnection.pop_front();
-        std::cerr << "OPTIMIZE: Reusing SQL connection!" << std::endl;
+        std::cout << "OPTIMIZE: Reusing SQL connection!" << std::endl;
         poolMutex.unlock();
     }
     return newInstance;

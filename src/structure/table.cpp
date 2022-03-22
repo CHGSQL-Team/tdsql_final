@@ -43,3 +43,23 @@ void Table::print(int trunc) {
 //        }
     }
 }
+
+void Table::insertRows(std::vector<Row *> &newRows) {
+    for(const auto &row:newRows){
+        insertRow(row);
+    }
+}
+
+inline void Table::insertRow(Row *newRow) {
+    if(priIndex){
+    }
+}
+
+void Table::getInsPhyArray(int *array) {
+    for(size_t i=0;i<colDes.size();i++){
+        array[i] = colDes[i]->mapping;
+    }
+}
+
+Row::Row(std::vector<std::string> &&data, int source, int stamp) : data(std::move(data)), source(source), stamp(stamp) {
+}

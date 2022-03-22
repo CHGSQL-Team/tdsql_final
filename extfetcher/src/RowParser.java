@@ -55,6 +55,7 @@ public class RowParser {
                 if (isAfter) builder.append("\"").append(buffer.getValue()).append("\",");
             }
         }
+        builder.deleteCharAt(builder.length() - 1);
         if (isAfter) builder.append("\n");
     }
 }

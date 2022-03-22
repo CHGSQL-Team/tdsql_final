@@ -48,11 +48,17 @@ public class DDLCompatWriter {
             writer.newLine();
         }
 
-        writer.write(Integer.toString(statement.getMysqlKeys().size()));
+        int realKeysCount = 0;
+        for (MySqlKey key :
+                statement.getMysqlKeys()) {
+            if (key.getIndexDefinition().getType() != null) realKeysCount++;
+        }
+        writer.write(Integer.toString(realKeysCount));
         writer.newLine();
 
         for (MySqlKey key :
                 statement.getMysqlKeys()) {
+            if (key.getIndexDefinition().getType() == null) continue;
             if (key.getName() == null) {
                 writer.write("0");
             } else {
@@ -90,22 +96,23 @@ public class DDLCompatWriter {
                 writer.write("1");
             else writer.write("0");
             writer.newLine();
-            if (addColItem.getColumns().get(0).getDefaultExpr() != null){
+            if (addColItem.getColumns().get(0).getDefaultExpr() != null) {
                 writer.write("1");
                 writer.newLine();
                 writer.write(addColItem.getColumns().get(0).getDefaultExpr().toString().replace("'", ""));
-            } else{
+            } else {
                 writer.write("0");
             }
             writer.newLine();
-            if(addColItem.getAfterColumn()!=null){
+            if (addColItem.getAfterColumn() != null) {
                 writer.write("1");
                 writer.newLine();
-                writer.write(addColItem.getAfterColumn().getSimpleName().replace("`",""));
+                writer.write(addColItem.getAfterColumn().getSimpleName().replace("`", ""));
                 writer.newLine();
-            }
+            } else writer.write("0");
+            writer.newLine();
         }
-        if(item instanceof SQLAlterTableAddIndex){
+        if (item instanceof SQLAlterTableAddIndex) {
             writer.write("NOTHING");
             writer.newLine();
         }

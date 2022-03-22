@@ -45,10 +45,12 @@ JVMConn::JVMConn(Module *module) : module(module) {
     vm_args.options = options;
     vm_args.ignoreUnrecognized = JNI_TRUE;
     int ret = JNI_CreateJavaVM(&vm, (void **) &env, &vm_args);
-    if (ret < 0) std::cerr << "Unable to create JVM" << std::endl;
+    if (ret < 0) std::cout << "Unable to create JVM" << std::endl;
 }
 
 JVMConn::~JVMConn() {
+    std::cout<<"[JvmC] DETACHING JVM!"<<std::endl;
+    vm->DetachCurrentThread();
     vm->DestroyJavaVM();
 
 }
@@ -65,7 +67,7 @@ JVMConn::callMethod(const char *className, const char *methodName, std::string &
         throw std::runtime_error(std::string("JVM ERROR no class ") + className);
     }
     std::string ret;
-    std::cerr << "[JvmC] Call " << className << " " << methodName << " " << std::endl;
+    std::cout << "[JvmC] Call " << className << " " << methodName << " " << std::endl;
     jmethodID jmethodId = env->GetStaticMethodID(clazz, methodName,
                                                  methodSign);
     if (jmethodId == nullptr) {

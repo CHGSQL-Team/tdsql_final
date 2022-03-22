@@ -15,4 +15,6 @@ public:
     void work();
 
     void initialTrace();
+
+    void alterTrace(int state);
 };

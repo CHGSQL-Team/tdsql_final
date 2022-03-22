@@ -28,13 +28,13 @@ void WorkLoader::_loadTable(const boost::filesystem::path &dbPath) const {
             int stateCount;
             stateCountReader >> stateCount;
             module->works.data[std::make_pair(dbName, tableName)] = new WorkDescriptor(dbName, tableName, entry,
-                                                                                       stateCount);
+                                                                                       stateCount + 1);
         }
     }
 }
 
 void WorkLoader::printWorks() const {
     for (const auto &i: module->works) {
-        std::cerr << "[WL Elem] DB: " << i.first.first << " Table: " << i.first.second << std::endl;
+        std::cout << "[WL Elem] DB: " << i.first.first << " Table: " << i.first.second << std::endl;
     }
 }

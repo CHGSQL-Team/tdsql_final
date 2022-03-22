@@ -37,14 +37,14 @@ void decodeWriteRow(const unsigned char *buffer, uint32_t event_len) {
     memcpy(&table_id, buffer, 6);
     size_t buf_offset = 10;
     buf_offset += getPacked(buffer + buf_offset, &column_cnt);
-    std::cerr << "table id=" << table_id << ",column cnt=" << column_cnt << std::endl << "col used=";
+    std::cout << "table id=" << table_id << ",column cnt=" << column_cnt << std::endl << "col used=";
 
     std::vector<int> col_used;
     buf_offset += fill_col_used(col_used, column_cnt, buffer + buf_offset);
     for (auto i: col_used) {
-        std::cerr << i << ",";
+        std::cout << i << ",";
     }
-    std::cerr << std::endl;*/
+    std::cout << std::endl;*/
 
 }
 
@@ -61,7 +61,7 @@ void GTIDEvent::decode(BinBuffer *buffer) {
 }
 
 void GTIDEvent::_print() {
-    std::cerr << "GTID: " << convert_sid(sid) << ":" << gno << std::endl;
+    std::cout << "GTID: " << convert_sid(sid) << ":" << gno << std::endl;
 }
 
 
@@ -98,7 +98,7 @@ void EventReader::set(unsigned long _size, const unsigned char *_buffer) {
 }
 
 void EventHeader::_print() const {
-    std::cerr << "Event type = " << get_type_str(type) << ", "
+    std::cout << "Event type = " << get_type_str(type) << ", "
               << "server id = " << server_id << ", "
               << "event len = " << event_len << ", "
               << "next position = " << next_position << ", "
@@ -117,7 +117,7 @@ void Event::_print_header() {
 void UnknownEvent::decode(BinBuffer *buffer) {}
 
 void UnknownEvent::_print() {
-    std::cerr << "No implemented Event" << std::endl;
+    std::cout << "No implemented Event" << std::endl;
 }
 
 void TableMapEvent::decode(BinBuffer *buffer) {
@@ -136,7 +136,7 @@ void TableMapEvent::decode(BinBuffer *buffer) {
 }
 
 void TableMapEvent::_print() {
-    std::cerr << "Table id = " << tableId << ", " << "Database = " << database << ", " << "Table = " << table << ", "
+    std::cout << "Table id = " << tableId << ", " << "Database = " << database << ", " << "Table = " << table << ", "
               << "Number of Cols = " << numberOfColumns << std::endl;
 }
 
