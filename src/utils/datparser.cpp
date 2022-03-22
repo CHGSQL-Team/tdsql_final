@@ -18,8 +18,8 @@ std::vector<Row *> DATParser::parseData() {
     std::cout << "datPath: " << datPath.c_str() << std::endl;
     std::string line;
     Tokenizer tok(line, separator);
-    int insPos[table->colPhy];
-    table->getInsPhyArray(insPos);
+    int *insPos = nullptr;
+    table->getPhyPosArray(insPos);
     while (std::getline(stream, line)) {
         std::vector<std::string> lineRes;
         lineRes.resize(table->colPhy);

@@ -110,6 +110,7 @@ cd SOURCE/build
   $dst_ip \
   $dst_port \
   $dst_user \
-  $dst_password
+  $dst_password \
+  NOSUPPRESS
 
 echo RETURN VALUE IS $?

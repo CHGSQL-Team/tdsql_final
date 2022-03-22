@@ -1,4 +1,5 @@
 #include "config.h"
+#include <cstring>
 #include <iostream>
 
 Config::Config(char **argv) {
@@ -16,6 +17,7 @@ Config::Config(char **argv) {
     sql_port[2] = std::stoi(std::string(argv[12]));
     sql_usr[2] = std::string(argv[13]);
     sql_pwd[2] = std::string(argv[14]);
+    supress_jvm = strcmp(argv[15], "SUPPRESS") == 0;
 }
 
 void Config::print_config() const {

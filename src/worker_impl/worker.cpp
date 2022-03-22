@@ -8,6 +8,7 @@ Worker::Worker(Module *module) : module(module) {
 void Worker::work() {
     for (auto const&[_, i]: module->works) {
         SubWorker subWorker(module, i);
-        subWorker.work();
+        if(i->db_name=="a" && i->table_name=="a")
+            subWorker.work();
     }
 }

@@ -27,7 +27,7 @@ public:
 
     void addColumn(ColumnDescriptor *newCol, std::string *after);
 
-    void addUniqueIndex(const std::string& name, const std::set<std::string>& colNames, bool isPrimary);
+    void addUniqueIndex(const std::string &name, const std::set<std::string> &colNames, bool isPrimary);
 
     void dropColumn(std::string colName);
 
@@ -41,7 +41,10 @@ public:
 
     void print(int trunc);
 
-    void getInsPhyArray(int *array);
+    size_t getPhyPosArray(int *&array);
+
+    void dumpToFile(boost::filesystem::path path);
+
 };
 
 class UniqueIndex {
@@ -54,7 +57,7 @@ public:
     bool isTemp;
     int *hashPhy = nullptr;
 
-    UniqueIndex(Table *table, std::string name, const std::set<std::string>& colStrs, bool isPrimary);
+    UniqueIndex(Table *table, std::string name, const std::set<std::string> &colStrs, bool isPrimary);
 
     void reCompute();
 
@@ -62,6 +65,8 @@ public:
 
     // Get temporary index
     explicit UniqueIndex(Table *table);
+
+    void updateRow(Row *row);
 };
 
 class Row {

@@ -1,6 +1,7 @@
 #include "worker_impl/subworker.h"
 #include "structure/statement.h"
 #include "utils/datparser.h"
+#include "utils/uniformlog.h"
 
 SubWorker::SubWorker(Module *module, WorkDescriptor *workDes) : module(module), workDes(workDes), traceIndex(0) {
 
@@ -17,19 +18,12 @@ void SubWorker::work() {
         for (int source = 0; source < 2; source++) {
             DATParser datParser(workDes->binlogPath / std::to_string(source) / (std::to_string(state) + ".dat"), source,
                                 stamp[source], workDes->table);
-//            std::vector<Row *> newRows = std::move(datParser.parseData());
-
-//            workDes->table.
-//            std::cout << "Printing new rows" << std::endl;
-//            for (const auto &row: newRows) {
-//                for (const auto &col: row->data) {
-//                    std::cout << col << ",";
-//                }
-//                std::cout << std::endl;
-//            }
+            std::vector<Row *> newRows = std::move(datParser.parseData());
+            workDes->table->insertRows(newRows);
         }
-        workDes->table->print(10);
+        workDes->table->print(20);
     }
+    workDes->table->dumpToFile(workDes->binlogPath / std::string("result.csv"));
 }
 
 void SubWorker::initialTrace() {
@@ -45,5 +39,5 @@ void SubWorker::alterTrace(int state) {
             workDes->binlogPath / "0" / (std::to_string(state) + ".ddlsql"));
     if (!statement) std::cout << "UNKNOWN ALTER!" << std::endl;
     else statement->print();
-
+    statement->fillToTable(workDes->table);
 }

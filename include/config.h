@@ -31,6 +31,7 @@ public:
     bool compress_row = false;
     bool use_transation = false;
     bool try_use_myisam_engine = false;
+    bool supress_jvm = false;
 
 
     void print_config() const;

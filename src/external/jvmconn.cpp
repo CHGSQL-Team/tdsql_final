@@ -28,20 +28,19 @@ std::string JVMConn::fetchAllLibs() {
 };
 
 JVMConn::JVMConn(Module *module) : module(module) {
-
     std::string class_path_str = boost::filesystem::canonical(module->config->class_path).string();
     std::string jar_path_str = fetchAllLibs();
-
-
     std::string option_str =
             std::string("-Djava.class.path=") + class_path_str + ":" + fetchAllLibs();
     char *option_cstr = new char[option_str.size() + 1];
     memset(option_cstr, 0, option_str.size() + 1);
     memcpy(option_cstr, option_str.c_str(), option_str.size());
     options[0].optionString = option_cstr;
+    char opt[] = "-Duser.timezone=Asia/Shanghai";
+    options[1].optionString = opt;
 
     vm_args.version = JNI_VERSION_1_8;
-    vm_args.nOptions = 1;
+    vm_args.nOptions = 2;
     vm_args.options = options;
     vm_args.ignoreUnrecognized = JNI_TRUE;
     int ret = JNI_CreateJavaVM(&vm, (void **) &env, &vm_args);

@@ -7,8 +7,7 @@
 int main(int argc, char **argv) {
     Config config(argv);
     Module module(&config);
-    // Need to detach JVM
-    {
+    if (!config.supress_jvm) {
         ExternalFetcher extFetcher(&module);
         extFetcher.evokeFetchAll(0, 1);
     }

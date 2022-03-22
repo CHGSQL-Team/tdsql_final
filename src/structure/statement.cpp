@@ -131,7 +131,8 @@ void AlterAddColStatement::print() {
 }
 
 void AlterAddColStatement::fillToTable(Table *table) {
-
+    auto newCol = new ColumnDescriptor(colStat.name, colStat.defaultStr);
+    table->addColumn(newCol, insAfter);
 }
 
 void ColumnStatement::print() const {
