@@ -1,6 +1,7 @@
 #pragma once
 
 #include "boost/filesystem.hpp"
+#include "utils/iohelper.h"
 #include "table.h"
 
 #include <string>
@@ -18,6 +19,12 @@ enum class AlterType {
 
 class Statement {
 public:
+    static Statement *getStatement(const boost::filesystem::path &path,
+                                   const boost::filesystem::path &sqlpath);
+
+    virtual void print() = 0;
+
+    virtual void fillToTable(Table *table) = 0;
 };
 
 class ColumnStatement;
@@ -26,23 +33,24 @@ class IndexStatement;
 
 class CreateTableStatement : public Statement {
 public:
-    explicit CreateTableStatement(const boost::filesystem::path &path,
-                                  const boost::filesystem::path &sqlpath);
+    static CreateTableStatement *getCreateTableStatement(IOHelper &iohelper);
+
+    explicit CreateTableStatement(IOHelper &ioHelper);
 
     std::string name;
     std::vector<ColumnStatement> cols;
     std::vector<IndexStatement> indexs;
 
-    void print();
+    void print() override;
 
-    void fillToTable(Table *table);
+    void fillToTable(Table *table) override;
 };
 
 class ColumnStatement {
 public:
     std::string name;
     bool isNotNull;
-    std::string *defaultStr;
+    std::string *defaultStr = nullptr;
 
     void print() const;
 };
@@ -60,12 +68,11 @@ public:
 
     explicit AlterStatement(AlterType type);
 
-    static AlterStatement *getAlterStatement(const boost::filesystem::path &path,
-                                             const boost::filesystem::path &sqlpath);
+    static AlterStatement *getAlterStatement(IOHelper &ioHelper);
 
-    virtual void print() = 0;
+    void print() override = 0;
 
-    virtual void fillToTable(Table* table) = 0;
+    void fillToTable(Table *table) override = 0;
 };
 
 class AlterAddColStatement : public AlterStatement {
@@ -77,7 +84,7 @@ public:
 
     void print() override;
 
-    void fillToTable(Table* table) override;
+    void fillToTable(Table *table) override;
 };
 
 class AlterNothingStatement : public AlterStatement {
@@ -86,5 +93,5 @@ public:
 
     void print() override;
 
-    void fillToTable(Table* table) override;
+    void fillToTable(Table *table) override;
 };

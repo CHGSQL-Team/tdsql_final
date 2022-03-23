@@ -45,6 +45,8 @@ public:
 
     void dumpToFile(boost::filesystem::path path);
 
+    void doRowReplace(Row *oldRow, Row *newRow);
+
 };
 
 class UniqueIndex {
@@ -53,6 +55,7 @@ public:
     std::string name;
     std::set<ColumnDescriptor *> cols;
     std::unordered_map<size_t, Row *> hash;
+
     bool isPrimary;
     bool isTemp;
     int *hashPhy = nullptr;
@@ -76,4 +79,5 @@ public:
     std::vector<std::string> data;
     int source;
     int stamp;
+    size_t idxInsideTable = -1;
 };

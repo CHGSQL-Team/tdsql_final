@@ -28,7 +28,7 @@ void WorkLoader::_loadTable(const boost::filesystem::path &dbPath) const {
             int stateCount;
             stateCountReader >> stateCount;
             module->works.data[std::make_pair(dbName, tableName)] = new WorkDescriptor(dbName, tableName, entry,
-                                                                                       stateCount + 1);
+                                                                                       stateCount);
         }
     }
 }

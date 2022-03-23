@@ -13,8 +13,9 @@ void SubWorker::work() {
     for (int state = 0; state < workDes->stateCount; state++) {
         std::cout << "[SubWorker] " << workDes->db_name << "/" << workDes->table_name << " entering state " << state
                   << std::endl;
-        if (state == 0) initialTrace();
-        else alterTrace(state);
+        Statement *statement = Statement::getStatement(workDes->binlogPath / "0" / (std::to_string(state) + ".ddl"),
+                                                       workDes->binlogPath / "0" / (std::to_string(state) + ".ddlsql"));
+        Trace(statement, state);
         for (int source = 0; source < 2; source++) {
             DATParser datParser(workDes->binlogPath / std::to_string(source) / (std::to_string(state) + ".dat"), source,
                                 stamp[source], workDes->table);
@@ -26,18 +27,14 @@ void SubWorker::work() {
     workDes->table->dumpToFile(workDes->binlogPath / std::string("result.csv"));
 }
 
-void SubWorker::initialTrace() {
-    CreateTableStatement statement(workDes->binlogPath / "0" / "0.ddl", workDes->binlogPath / "0" / "0.ddlsql");
-    workDes->table = new Table(workDes);
-    statement.print();
-    statement.fillToTable(workDes->table);
-}
-
-void SubWorker::alterTrace(int state) {
-    AlterStatement *statement = AlterStatement::getAlterStatement(
-            workDes->binlogPath / "0" / (std::to_string(state) + ".ddl"),
-            workDes->binlogPath / "0" / (std::to_string(state) + ".ddlsql"));
-    if (!statement) std::cout << "UNKNOWN ALTER!" << std::endl;
-    else statement->print();
-    statement->fillToTable(workDes->table);
+void SubWorker::Trace(Statement *statement_, int state) {
+    if (dynamic_cast<CreateTableStatement *>(statement_)) {
+        if (state != 0) {
+            std::cout << "[SubWorker] Duplicated create table, refused to change." << std::endl;
+            return;
+        }
+        workDes->table = new Table(workDes);
+    }
+    statement_->print();
+    statement_->fillToTable(workDes->table);
 }

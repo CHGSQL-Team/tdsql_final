@@ -120,6 +120,13 @@ bool SQLInstance::_isTableAvail_impl_show(const std::string &db, const std::stri
     return true;
 }
 
+void SQLInstance::dropTable(const std::string &name) {
+    sql::Statement *stmt;
+    stmt = con->createStatement();
+    stmt->executeUpdate("DROP TABLE IF EXISTS `" + name + "`");
+    delete stmt;
+}
+
 SQLPool::SQLPool(Config *_config) {
     driver = get_driver_instance();
     config = _config;
@@ -139,7 +146,6 @@ SQLInstance *SQLPool::getSQLInstance() {
         newInstance = new SQLInstance(availConnection.front(), this);
         newInstance->getConnection()->setAutoCommit(true);
         availConnection.pop_front();
-        std::cout << "[SQLConn] Reusing SQL connection!" << std::endl;
         poolMutex.unlock();
     }
     return newInstance;

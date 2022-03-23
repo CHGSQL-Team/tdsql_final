@@ -42,9 +42,9 @@ public:
 
     void createDB(const std::string &name);
 
-    void executeRaw(const std::string &content);
+    void dropTable(const std::string &name);
 
-//    void insertRows(TableDescriptor *table, std::vector<std::string> &data);
+    void executeRaw(const std::string &content);
 
     sql::Connection *getConnection();
 

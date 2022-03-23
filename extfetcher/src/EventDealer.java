@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableStatement;
 import com.alibaba.druid.sql.ast.statement.SQLCreateTableStatement;
+import com.alibaba.druid.sql.ast.statement.SQLDropDatabaseStatement;
 import com.taobao.tddl.dbsync.binlog.LogEvent;
 import com.taobao.tddl.dbsync.binlog.event.QueryLogEvent;
 import com.taobao.tddl.dbsync.binlog.event.RowsLogEvent;
@@ -26,8 +27,8 @@ public class EventDealer {
     }
 
     public void closeAll() throws IOException {
-        for (ImmutablePair<String,String> key:
-             tableAlterStateLookup.keySet()) {
+        for (ImmutablePair<String, String> key :
+                tableAlterStateLookup.keySet()) {
             try (BufferedWriter countWriter = new BufferedWriter(getFileWriter(
                     binlogFolder.resolve(key.left)
                             .resolve(key.right)
@@ -35,7 +36,7 @@ public class EventDealer {
                             .resolve("cnt.txt")
                             .toFile()
             ))) {
-                countWriter.write(Integer.toString(tableAlterStateLookup.get(key)));
+                countWriter.write(Integer.toString(tableAlterStateLookup.get(key) + 1));
             }
         }
 
@@ -72,11 +73,12 @@ public class EventDealer {
         if (event.getQuery().equals("BEGIN")) return;
         SQLStatement statement_ = SQLParser.parse(event.getQuery());
         String dbName = event.getDbName();
+//        System.out.println(event.getQuery());
         if (statement_ instanceof SQLCreateTableStatement) {
             SQLCreateTableStatement statement = (SQLCreateTableStatement) statement_;
             String tableName = statement.getTableName().replace("`", "");
-
             updateTableWriterAndDdlSql(dbName, tableName, statement);
+
         }
 
         if (statement_ instanceof SQLAlterTableStatement) {
@@ -84,6 +86,12 @@ public class EventDealer {
             String tableName = statement.getTableName().replace("`", "");
             updateTableWriterAndDdlSql(dbName, tableName, statement);
         }
+
+        if (statement_ instanceof SQLDropDatabaseStatement) {
+            SQLDropDatabaseStatement statement = (SQLDropDatabaseStatement) statement_;
+            dropTableWriterAndDdlSql(dbName);
+        }
+
     }
 
     private void updateTableWriterAndDdlSql(String dbName, String tableName, SQLStatement statement) throws IOException {
@@ -118,6 +126,13 @@ public class EventDealer {
                         .resolve(tableAlterStateLookup.get(new ImmutablePair<>(dbName, tableName)).toString() + ".ddl")
                         .toFile()
         ), statement);
+    }
+
+    private void dropTableWriterAndDdlSql(String dbName) throws IOException {
+        for (HashMap.Entry<ImmutablePair<String, String>, BufferedWriter> entry : tableWriterLookup.entrySet())
+            entry.getValue().close();
+        tableWriterLookup.entrySet().removeIf(e -> e.getKey().left.equals(dbName));
+        tableAlterStateLookup.entrySet().removeIf(e -> e.getKey().left.equals(dbName));
     }
 
 //    private String dealEventData(GtidEventData eventData) {

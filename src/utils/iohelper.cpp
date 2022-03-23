@@ -6,8 +6,9 @@ IOHelper::IOHelper(std::ifstream *stream) : stream(stream) {
 
 std::string IOHelper::getLine() const {
     std::string ret;
-    std::getline(*stream, ret);
-    return ret;
+    if (std::getline(*stream, ret))
+        return ret;
+    else return "";
 }
 
 int IOHelper::getLineInt() const {

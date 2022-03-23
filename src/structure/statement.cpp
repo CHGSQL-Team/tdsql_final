@@ -5,22 +5,8 @@
 #include <utility>
 #include "utils/uniformlog.h"
 
-CreateTableStatement::CreateTableStatement(const boost::filesystem::path &path,
-                                           const boost::filesystem::path &sqlpath) {
-    std::ifstream input(path.c_str());
-    std::ifstream dbgInput(sqlpath.c_str());
-    IOHelper dbgHelper(&dbgInput);
-    {
-        UniformLog log("Create Table Statement");
-        std::cout << dbgHelper.getEntireFile() << std::endl;
-    }
-
-
-    IOHelper helper(&input);
-    std::string type, tableName;
-    type = helper.getLine();
-
-    if (type != "CREATE") throw std::runtime_error("should have create table statement!");
+CreateTableStatement::CreateTableStatement(IOHelper &helper) {
+    std::string tableName;
     tableName = helper.getLine();
     int colCount = helper.getLineInt();
     name = tableName;
@@ -79,20 +65,12 @@ void CreateTableStatement::fillToTable(Table *table) {
     }
 }
 
+CreateTableStatement *CreateTableStatement::getCreateTableStatement(IOHelper &iohelper) {
+    return new CreateTableStatement(iohelper);
+}
 
-AlterStatement *
-AlterStatement::getAlterStatement(const boost::filesystem::path &path, const boost::filesystem::path &sqlpath) {
-    std::ifstream input(path.c_str());
-    std::ifstream dbgInput(sqlpath.c_str());
-    IOHelper dbgHelper(&dbgInput);
-    {
-        UniformLog log("Alter Table Statement");
-        std::cout << dbgHelper.getEntireFile() << std::endl;
-    }
 
-    IOHelper helper(&input);
-    std::string OpStr = helper.getLine();
-    if (OpStr != "ALTER") throw std::runtime_error("Not an alter statement!");
+AlterStatement *AlterStatement::getAlterStatement(IOHelper &helper) {
     std::string typeStr = helper.getLine();
     if (typeStr == "ADDCOL") {
         std::string colName = helper.getLine();
@@ -110,6 +88,7 @@ AlterStatement::getAlterStatement(const boost::filesystem::path &path, const boo
     } else if (typeStr == "NOTHING") {
         return new AlterNothingStatement();
     }
+    throw std::runtime_error("Alter type no implemented!");
     return nullptr;
 }
 
@@ -153,4 +132,20 @@ AlterNothingStatement::AlterNothingStatement() : AlterStatement(AlterType::NOTHI
 
 void AlterNothingStatement::fillToTable(Table *table) {
     // Do nothing
+}
+
+Statement *Statement::getStatement(const boost::filesystem::path &path, const boost::filesystem::path &sqlpath) {
+    std::ifstream input(path.c_str());
+    std::ifstream dbgInput(sqlpath.c_str());
+    IOHelper dbgHelper(&dbgInput);
+    {
+        UniformLog log("Create Table Statement");
+        std::cout << dbgHelper.getEntireFile() << std::endl;
+    }
+    IOHelper helper(&input);
+    std::string type;
+    type = helper.getLine();
+    if (type == "CREATE") return CreateTableStatement::getCreateTableStatement(helper);
+    else if (type == "ALTER") return AlterStatement::getAlterStatement(helper);
+    else throw std::runtime_error("Unknown type of statement!");
 }

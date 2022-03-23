@@ -71,8 +71,10 @@ void Table::insertRows(std::vector<Row *> &newRows) {
 inline void Table::insertRow(Row *newRow) {
     if (indexs.size() != 1) throw std::runtime_error("Index size should be 1!");
     auto index = *(indexs.begin());
+
     if (index->checkRow(newRow) == 0) {
         index->updateRow(newRow);
+        newRow->idxInsideTable = rows.size();
         rows.push_back(newRow);
     }
 }
@@ -95,12 +97,19 @@ void Table::dumpToFile(boost::filesystem::path path) {
     int *phyPos = nullptr;
     size_t size = getPhyPosArray(phyPos);
     for (auto row: rows) {
+        if (!row) continue;
         for (int i = 0; i < size; i++) {
-            stream << std::quoted(row->data[phyPos[i]]);
+            stream << std::quoted(row->data[phyPos[i]], '\'', '\\');
             if (i != size - 1) stream << ",";
         }
         stream << std::endl;
     }
+    stream.close();
+}
+
+void Table::doRowReplace(Row *oldRow, Row *newRow) {
+    rows[oldRow->idxInsideTable] = newRow;
+    newRow->idxInsideTable = oldRow->idxInsideTable;
 }
 
 Row::Row(std::vector<std::string> &&data, int source, int stamp) : data(std::move(data)), source(source), stamp(stamp) {
@@ -114,23 +123,24 @@ int UniqueIndex::checkRow(Row *row) {
     auto it = hash.find(hashValue);
     if (it != hash.end()) {
         auto oldRow = it->second;
+
         if (oldRow->data[table->updCol->mapping] == row->data[table->updCol->mapping]) {
             if (row->source < oldRow->source) {
                 it->second = row;
+                table->doRowReplace(oldRow, row);
                 return 1;
             } else if (row->source > oldRow->source) {
                 return -1;
             } else {
                 if (row->stamp > oldRow->stamp) {
-//                    std::cout << "Clearing using STAMP" << row->data[4] << "STAMP IS " << row->stamp << " "
-//                              << oldRow->data[4] << "STAMP IS " << oldRow->stamp << std::endl;
                     it->second = row;
-//                    std::cout << "NEW ROW IS " << it->second->data[4] << std::endl;
+                    table->doRowReplace(oldRow, row);
                     return 1;
                 } else return -1;
             }
         } else if (oldRow->data[table->updCol->mapping] < row->data[table->updCol->mapping]) {
             it->second = row;
+            table->doRowReplace(oldRow, row);
             return 1;
         } else return -1;
     } else return 0;
@@ -153,6 +163,7 @@ UniqueIndex::UniqueIndex(Table *table, std::string name, const std::set<std::str
 
 UniqueIndex::UniqueIndex(Table *table) : table(table), name("___TEMP_PRIMARY"), isPrimary(false), isTemp(true) {
     std::copy(table->colDes.begin(), table->colDes.end(), std::inserter(cols, cols.end()));
+    cols.erase(table->updCol);
     hashPhy = new int[cols.size()];
     int pos = 0;
     for (auto col: cols)

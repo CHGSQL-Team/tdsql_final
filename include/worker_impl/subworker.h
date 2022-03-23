@@ -1,6 +1,7 @@
 #pragma once
 
 #include "structure/module.h"
+#include "structure/statement.h"
 #include <string>
 
 class SubWorker {
@@ -14,7 +15,5 @@ public:
 
     void work();
 
-    void initialTrace();
-
-    void alterTrace(int state);
+    void Trace(Statement* statement_, int state);
 };
