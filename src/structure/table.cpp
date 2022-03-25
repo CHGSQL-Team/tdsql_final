@@ -71,7 +71,7 @@ void Table::insertRows(std::vector<Row *> &newRows) {
 }
 
 inline void Table::insertRow(Row *newRow) {
-    if(!updCol) throw std::runtime_error("updated_at col not found!");
+    if (!updCol) throw std::runtime_error("updated_at col not found!");
     if (indexs.size() != 1) throw std::runtime_error("Index size should be 1!");
     auto index = *(indexs.begin());
 
@@ -113,6 +113,7 @@ void Table::dumpToFile(boost::filesystem::path path) {
 void Table::doRowReplace(Row *oldRow, Row *newRow) {
     rows[oldRow->idxInsideTable] = newRow;
     newRow->idxInsideTable = oldRow->idxInsideTable;
+    delete oldRow; // TODO: will it cause problem?
 }
 
 void Table::dropColumn(const std::string &colName) {
@@ -122,9 +123,10 @@ void Table::dropColumn(const std::string &colName) {
     if (col == colDes.end()) throw std::runtime_error("Can not find column to drop!");
     for (auto index = indexs.begin(); index != indexs.end();) {
         (*index)->deleteCol(*col);
-        if ((*index)->cols.empty())
+        if ((*index)->cols.empty()) {
+            delete (*index);
             index = indexs.erase(index);
-        else ++index;
+        } else ++index;
     }
     colDes.erase(col);
     if (indexs.empty())
@@ -154,6 +156,9 @@ void Table::dropUniqueIndex(bool isPrimary, bool isTemp, const std::string &inde
 Table::~Table() {
     for (const auto &row: rows) {
         delete row;
+    }
+    for (const auto &index: indexs) {
+        delete index;
     }
 }
 
@@ -212,13 +217,12 @@ void UniqueIndex::reCompute() {
     for (size_t i = 0; i < rowCount; i++) {
         int checkRes = checkRow(table->rows[i]);
         if (checkRes == 0) {
-            hash[getHashOfRow(table->rows[i])] = table->rows[i];
+            updateRow(table->rows[i]);
         } else table->rows[i] = nullptr;
     }
 }
 
-void UniqueIndex::updateRow(Row *row) {
-    size_t size = cols.size();
+inline void UniqueIndex::updateRow(Row *row) {
     hash[getHashOfRow(row)] = row;
 }
 

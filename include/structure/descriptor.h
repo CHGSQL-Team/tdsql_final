@@ -27,8 +27,6 @@ public:
 
     WorkDescriptor(std::string _db_name, std::string _table_name, boost::filesystem::path binlogPath, int stateCount);
 
-    WorkDescriptor();
-
     ~WorkDescriptor();
 
     template<typename Archive>
