@@ -56,7 +56,11 @@ public class RowParser {
             buffer.nextValue(null, i, info.type, info.meta);
             if (!buffer.isNull()) {
                 if (isAfter) {
-                    builder.append("\"").append(unescaper.translate(StringEscapeUtils.escapeJava(buffer.getValue().toString()))).append("\",");
+                    builder.append("\"");
+                    if (buffer.getValue() instanceof String)
+                        builder.append(unescaper.translate(StringEscapeUtils.escapeJava(buffer.getValue().toString())));
+                    else builder.append(buffer.getValue().toString());
+                    builder.append("\",");
                 }
             }
         }
