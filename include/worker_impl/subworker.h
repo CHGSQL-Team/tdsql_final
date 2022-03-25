@@ -16,4 +16,6 @@ public:
     void work();
 
     void Trace(Statement* statement_, int state);
+
+    ~SubWorker();
 };

@@ -14,7 +14,7 @@ void Table::addColumn(ColumnDescriptor *newCol, std::string *after) {
         auto baseCol = std::find_if(colDes.begin(), colDes.end(),
                                     [=](const ColumnDescriptor *x) { return x->name == *after; });
         if (baseCol == colDes.end()) throw std::runtime_error("Can not find col to insert!");
-        colDes.insert(baseCol, newCol);
+        colDes.insert(++baseCol, newCol);
     } else {
         colDes.push_back(newCol);
     }
@@ -30,6 +30,8 @@ void Table::addColumn(ColumnDescriptor *newCol, std::string *after) {
             }
         }
     }
+    if (!indexs.empty() && indexs[0]->isTemp)
+        dropUniqueIndex(false, true, ""); // Don't worry, new temp index will be created!
 }
 
 void Table::print(int trunc) {
@@ -69,6 +71,7 @@ void Table::insertRows(std::vector<Row *> &newRows) {
 }
 
 inline void Table::insertRow(Row *newRow) {
+    if(!updCol) throw std::runtime_error("updated_at col not found!");
     if (indexs.size() != 1) throw std::runtime_error("Index size should be 1!");
     auto index = *(indexs.begin());
 
@@ -112,15 +115,53 @@ void Table::doRowReplace(Row *oldRow, Row *newRow) {
     newRow->idxInsideTable = oldRow->idxInsideTable;
 }
 
+void Table::dropColumn(const std::string &colName) {
+    auto col = std::find_if(colDes.begin(), colDes.end(), [&](const ColumnDescriptor *x) {
+        return x->name == colName;
+    });
+    if (col == colDes.end()) throw std::runtime_error("Can not find column to drop!");
+    for (auto index = indexs.begin(); index != indexs.end();) {
+        (*index)->deleteCol(*col);
+        if ((*index)->cols.empty())
+            index = indexs.erase(index);
+        else ++index;
+    }
+    colDes.erase(col);
+    if (indexs.empty())
+        indexs.push_back(new UniqueIndex(this));
+
+    nameToColDes.erase(colName);
+
+}
+
+void Table::dropUniqueIndex(bool isPrimary, bool isTemp, const std::string &indexName) {
+    auto toDrop = std::find_if(indexs.begin(), indexs.end(), [&](UniqueIndex *index) {
+        if (isPrimary) return index->isPrimary;
+        else if (isTemp)
+            return index->isTemp;
+        else
+            return index->name == indexName;
+    });
+    if (toDrop == indexs.end()) {
+        std::cout << "Can not find index to drop. May be the index is ignored at the very first. It is okay!"
+                  << std::endl;
+        return;
+    }
+    indexs.erase(toDrop);
+    if (indexs.empty()) indexs.push_back(new UniqueIndex(this));
+}
+
+Table::~Table() {
+    for (const auto &row: rows) {
+        delete row;
+    }
+}
+
 Row::Row(std::vector<std::string> &&data, int source, int stamp) : data(std::move(data)), source(source), stamp(stamp) {
 }
 
 int UniqueIndex::checkRow(Row *row) {
-    size_t size = cols.size();
-    size_t hashValue = 2022;
-    for (size_t i = 0; i < size; i++)
-        boost::hash_combine(hashValue, row->data[hashPhy[i]]);
-    auto it = hash.find(hashValue);
+    auto it = hash.find(getHashOfRow(row));
     if (it != hash.end()) {
         auto oldRow = it->second;
 
@@ -154,31 +195,54 @@ UniqueIndex::UniqueIndex(Table *table, std::string name, const std::set<std::str
             return col->name == colStr;
         }));
     }
-    hashPhy = new int[cols.size()];
-    int pos = 0;
-    for (auto col: cols)
-        hashPhy[pos++] = col->mapping;
+    setHashPhy();
     reCompute();
 }
 
 UniqueIndex::UniqueIndex(Table *table) : table(table), name("___TEMP_PRIMARY"), isPrimary(false), isTemp(true) {
     std::copy(table->colDes.begin(), table->colDes.end(), std::inserter(cols, cols.end()));
     cols.erase(table->updCol);
-    hashPhy = new int[cols.size()];
-    int pos = 0;
-    for (auto col: cols)
-        hashPhy[pos++] = col->mapping;
+    setHashPhy();
     reCompute();
 }
 
 void UniqueIndex::reCompute() {
-
+    hash.clear();
+    size_t rowCount = table->rows.size();
+    for (size_t i = 0; i < rowCount; i++) {
+        int checkRes = checkRow(table->rows[i]);
+        if (checkRes == 0) {
+            hash[getHashOfRow(table->rows[i])] = table->rows[i];
+        } else table->rows[i] = nullptr;
+    }
 }
 
 void UniqueIndex::updateRow(Row *row) {
     size_t size = cols.size();
+    hash[getHashOfRow(row)] = row;
+}
+
+size_t UniqueIndex::getHashOfRow(Row *row) const {
+    size_t size = cols.size();
     size_t hashValue = 2022;
     for (size_t i = 0; i < size; i++)
         boost::hash_combine(hashValue, row->data[hashPhy[i]]);
-    hash[hashValue] = row;
+    return hashValue;
+}
+
+void UniqueIndex::setHashPhy() {
+    delete[] hashPhy;
+    hashPhy = new int[cols.size()];
+    int pos = 0;
+    for (auto col: cols)
+        hashPhy[pos++] = col->mapping;
+}
+
+void UniqueIndex::deleteCol(ColumnDescriptor *delCol) {
+    auto indexTargetCol = cols.find(delCol);
+    if (indexTargetCol != cols.end()) {
+        cols.erase(indexTargetCol);
+        setHashPhy();
+        reCompute();
+    }
 }

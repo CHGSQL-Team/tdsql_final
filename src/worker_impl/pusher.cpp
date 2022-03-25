@@ -57,6 +57,12 @@ void Pusher::pushFromFile() {
 void Pusher::flushSQL(const std::string &sqlHeader, const std::string &sqlContent) {
     SQLInstance *instance = module->sqlPool->getSQLInstance();
     instance->setSchema(workDes->db_name);
-    instance->executeRaw(sqlHeader + sqlContent);
+    try {
+        instance->executeRaw(sqlHeader + sqlContent);
+    } catch (sql::SQLException &exception) {
+        std::cout << "FAILED INSERT!!!!" << std::endl;
+        std::cout << sqlHeader + sqlContent << std::endl;
+    }
+
     delete instance;
 }

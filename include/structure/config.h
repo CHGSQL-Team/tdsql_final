@@ -17,7 +17,7 @@ public:
     std::string jar_path = "../extfetcher/libs/";
 
     int hash_split_threshold = 4000000;
-    int push_split_threshold = 10000;
+    int push_split_threshold = 1000;
     int subworker_threads = 2; //should be set to 2 now
     int hasher_threads = 12;
     int pusher_threads = 40;

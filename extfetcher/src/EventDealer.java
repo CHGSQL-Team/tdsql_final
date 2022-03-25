@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableStatement;
+import com.alibaba.druid.sql.ast.statement.SQLCreateDatabaseStatement;
 import com.alibaba.druid.sql.ast.statement.SQLCreateTableStatement;
 import com.alibaba.druid.sql.ast.statement.SQLDropDatabaseStatement;
 import com.taobao.tddl.dbsync.binlog.LogEvent;
@@ -79,17 +80,15 @@ public class EventDealer {
             String tableName = statement.getTableName().replace("`", "");
             updateTableWriterAndDdlSql(dbName, tableName, statement);
 
-        }
-
-        if (statement_ instanceof SQLAlterTableStatement) {
+        } else if (statement_ instanceof SQLAlterTableStatement) {
             SQLAlterTableStatement statement = (SQLAlterTableStatement) statement_;
             String tableName = statement.getTableName().replace("`", "");
             updateTableWriterAndDdlSql(dbName, tableName, statement);
-        }
-
-        if (statement_ instanceof SQLDropDatabaseStatement) {
-            SQLDropDatabaseStatement statement = (SQLDropDatabaseStatement) statement_;
+        } else if (statement_ instanceof SQLDropDatabaseStatement) {
             dropTableWriterAndDdlSql(dbName);
+        } else {
+            if (!(statement_ instanceof SQLCreateDatabaseStatement))
+                System.out.println("Not handled query! " + event.getQuery());
         }
 
     }
@@ -135,40 +134,5 @@ public class EventDealer {
         tableAlterStateLookup.entrySet().removeIf(e -> e.getKey().left.equals(dbName));
     }
 
-//    private String dealEventData(GtidEventData eventData) {
-//        return "";
-//    }
-//
-//    private String dealEventData(PreviousGtidSetEventData eventData) {
-//        return "";
-//    }
-//
-//    private String dealEventData(TableMapEventData eventData) {
-////        idTableLookup.put(eventData.getTableId(), new ImmutablePair<>(eventData.getDatabase(), eventData.getTable()));
-//        return "";
-//    }
-//
-//    private String dealEventData(WriteRowsEventData eventData) {
-//        return eventData.toString() + "\n";
-//
-//    }
-//
-//    private String dealEventData(QueryEventData eventData) throws IOException {
-//        String sql = eventData.getSql();
-//        String dataBase = eventData.getDatabase();
-//        if (sql.contains("alter table") || sql.contains("ALTER TABLE")) {
-//            return sql;
-//
-////            String[] sql_splited = sql.split(" ");
-////            String table = sql_splited[5].substring(1, sql_splited[5].length() - 1);
-////            tableAlterStateLookup.put(new ImmutablePair<>(dataBase, table), 0);
-////            File outFile = outFolder.resolve(dataBase).resolve(table).resolve(index).resolve("0.txt").toFile();
-////            if (!outFile.getParentFile().mkdirs()) {
-////                System.out.println("Failed making dirs");
-////            }
-////            tableWriterLookup.put(new ImmutablePair<>(dataBase, table), new BufferedWriter(new FileWriter(outFile)));
-//        }
-//        return "";
-//    }
 
 }

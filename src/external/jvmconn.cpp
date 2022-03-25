@@ -36,11 +36,13 @@ JVMConn::JVMConn(Module *module) : module(module) {
     memset(option_cstr, 0, option_str.size() + 1);
     memcpy(option_cstr, option_str.c_str(), option_str.size());
     options[0].optionString = option_cstr;
-    char opt[] = "-Duser.timezone=Asia/Shanghai";
-    options[1].optionString = opt;
+    char opt1[] = "-Duser.timezone=Asia/Shanghai";
+    options[1].optionString = opt1;
+    char opt2[] = "-Dfile.encoding=UTF-8";
+    options[2].optionString = opt2;
 
     vm_args.version = JNI_VERSION_1_8;
-    vm_args.nOptions = 2;
+    vm_args.nOptions = 3;
     vm_args.options = options;
     vm_args.ignoreUnrecognized = JNI_TRUE;
     int ret = JNI_CreateJavaVM(&vm, (void **) &env, &vm_args);

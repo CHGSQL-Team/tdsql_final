@@ -87,8 +87,13 @@ AlterStatement *AlterStatement::getAlterStatement(IOHelper &helper) {
         return new AlterAddColStatement(colStat, after);
     } else if (typeStr == "NOTHING") {
         return new AlterNothingStatement();
-    }
-    throw std::runtime_error("Alter type no implemented!");
+    } else if (typeStr == "DROPCOL") {
+        std::string colName = helper.getLine();
+        return new AlterDropColStatement(colName);
+    } else if (typeStr == "DROPINDEX") {
+        return new AlterDropIndexStatement(helper);
+    } else
+        throw std::runtime_error("Alter type no implemented!");
     return nullptr;
 }
 
@@ -139,7 +144,7 @@ Statement *Statement::getStatement(const boost::filesystem::path &path, const bo
     std::ifstream dbgInput(sqlpath.c_str());
     IOHelper dbgHelper(&dbgInput);
     {
-        UniformLog log("Create Table Statement");
+        UniformLog log("Statement");
         std::cout << dbgHelper.getEntireFile() << std::endl;
     }
     IOHelper helper(&input);
@@ -148,4 +153,34 @@ Statement *Statement::getStatement(const boost::filesystem::path &path, const bo
     if (type == "CREATE") return CreateTableStatement::getCreateTableStatement(helper);
     else if (type == "ALTER") return AlterStatement::getAlterStatement(helper);
     else throw std::runtime_error("Unknown type of statement!");
+}
+
+AlterDropColStatement::AlterDropColStatement(std::string colName) : AlterStatement(AlterType::DROPCOL),
+                                                                    colName(std::move(colName)) {
+
+}
+
+void AlterDropColStatement::print() {
+    UniformLog log("AlterDropColStatement");
+    std::cout << "Drop column: " << colName << std::endl;
+}
+
+void AlterDropColStatement::fillToTable(Table *table) {
+    table->dropColumn(colName);
+}
+
+void AlterDropIndexStatement::fillToTable(Table *table) {
+    table->dropUniqueIndex(isPrimary, false, indexName);
+}
+
+void AlterDropIndexStatement::print() {
+    UniformLog log("AlterDropIndexStatement");
+    std::cout << "Drop index: " << (isPrimary ? "PRIMARY KEY" : indexName) << std::endl;
+}
+
+AlterDropIndexStatement::AlterDropIndexStatement(IOHelper &ioHelper) : AlterStatement(AlterType::DROPINDEX) {
+    isPrimary = ioHelper.getLineInt();
+    if (!isPrimary) {
+        indexName = ioHelper.getLine();
+    }
 }

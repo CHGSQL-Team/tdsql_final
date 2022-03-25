@@ -23,10 +23,14 @@ std::vector<Row *> DATParser::parseData() {
     while (std::getline(stream, line)) {
         std::vector<std::string> lineRes;
         lineRes.resize(table->colPhy);
-        tok.assign(line);
-        int pos = 0;
-        for (Tokenizer::iterator it = tok.begin(); it != tok.end(); it++) {
-            lineRes[insPos[pos++]] = *it;
+        try {
+            tok.assign(line);
+            int pos = 0;
+            for (Tokenizer::iterator it = tok.begin(); it != tok.end(); it++) {
+                lineRes[insPos[pos++]] = *it;
+            }
+        } catch (boost::wrapexcept<boost::escaped_list_error> &err) {
+            std::cout << "Escaped list error! " << line << std::endl;
         }
         Row *row = new Row(std::move(lineRes), source, stamp++);
         ret.push_back(row);

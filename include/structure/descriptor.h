@@ -72,4 +72,6 @@ public:
     std::string name;
     int mapping = -1;
     std::string *def = nullptr;
+
+    bool operator < (const ColumnDescriptor &t) const;
 };

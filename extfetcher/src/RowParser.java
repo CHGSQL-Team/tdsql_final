@@ -1,15 +1,18 @@
-import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.text.translate.UnicodeUnescaper;
+
+
 import com.taobao.tddl.dbsync.binlog.*;
 import com.taobao.tddl.dbsync.binlog.event.*;
+import org.apache.commons.text.StringEscapeUtils;
 
 public class RowParser {
     protected static Charset charset = StandardCharsets.UTF_8;
-
+    protected static UnicodeUnescaper unescaper = new UnicodeUnescaper();
 
     public static String parseRowsEvent(RowsLogEvent event, AtomicLong sum) {
         StringBuilder ret = new StringBuilder();
@@ -52,10 +55,15 @@ public class RowParser {
             TableMapLogEvent.ColumnInfo info = columnInfo[i];
             buffer.nextValue(null, i, info.type, info.meta);
             if (!buffer.isNull()) {
-                if (isAfter) builder.append("\"").append(buffer.getValue()).append("\",");
+                if (isAfter) {
+                    builder.append("\"").append(unescaper.translate(StringEscapeUtils.escapeJava(buffer.getValue().toString()))).append("\",");
+                }
             }
         }
-        if (isAfter) builder.deleteCharAt(builder.length() - 1);
-        if (isAfter) builder.append("\n");
+        if (isAfter) {
+            builder.deleteCharAt(builder.length() - 1);
+            builder.append("\n");
+        }
+
     }
 }

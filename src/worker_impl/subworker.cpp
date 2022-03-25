@@ -38,3 +38,7 @@ void SubWorker::Trace(Statement *statement_, int state) {
     statement_->print();
     statement_->fillToTable(workDes->table);
 }
+
+SubWorker::~SubWorker() {
+    delete workDes;
+}

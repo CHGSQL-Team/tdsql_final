@@ -29,9 +29,9 @@ public:
 
     void addUniqueIndex(const std::string &name, const std::set<std::string> &colNames, bool isPrimary);
 
-    void dropColumn(std::string colName);
+    void dropColumn(const std::string &colName);
 
-    void dropUniqueIndex(std::string indexName);
+    void dropUniqueIndex(bool isPrimary, bool isTemp, const std::string &indexName);
 
     void changeCol(std::string colName, ColumnDescriptor *newCol);
 
@@ -46,6 +46,8 @@ public:
     void dumpToFile(boost::filesystem::path path);
 
     void doRowReplace(Row *oldRow, Row *newRow);
+
+    ~Table();
 
 };
 
@@ -66,10 +68,16 @@ public:
 
     int checkRow(Row *row);
 
+    void setHashPhy();
+
     // Get temporary index
     explicit UniqueIndex(Table *table);
 
     void updateRow(Row *row);
+
+    size_t getHashOfRow(Row *row) const;
+
+    void deleteCol(ColumnDescriptor *delCol);
 };
 
 class Row {

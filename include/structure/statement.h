@@ -95,3 +95,26 @@ public:
 
     void fillToTable(Table *table) override;
 };
+
+class AlterDropColStatement : public AlterStatement {
+public:
+    std::string colName;
+
+    explicit AlterDropColStatement(std::string colName);
+
+    void print() override;
+
+    void fillToTable(Table *table) override;
+};
+
+class AlterDropIndexStatement : public AlterStatement {
+public:
+    bool isPrimary;
+    std::string indexName;
+
+    void print() override;
+
+    void fillToTable(Table *table) override;
+
+    explicit AlterDropIndexStatement(IOHelper &ioHelper);
+};

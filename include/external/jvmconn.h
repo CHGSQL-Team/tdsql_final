@@ -13,7 +13,7 @@ private:
     JavaVM *vm{};
     JNIEnv *env{};
     JavaVMInitArgs vm_args{};
-    JavaVMOption options[2]{};
+    JavaVMOption options[3]{};
 public:
     bool GetJniEnv(JavaVM *vm_, JNIEnv **env_);
 

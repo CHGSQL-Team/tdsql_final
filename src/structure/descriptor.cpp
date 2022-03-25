@@ -9,8 +9,13 @@ WorkDescriptor::WorkDescriptor(std::string _db_name, std::string _table_name, bo
 }
 
 WorkDescriptor::~WorkDescriptor() {
+    delete table;
 }
 
-ColumnDescriptor::ColumnDescriptor(std::string name, std::string* def) : name(std::move(name)), def(def) {
+ColumnDescriptor::ColumnDescriptor(std::string name, std::string *def) : name(std::move(name)), def(def) {
 
+}
+
+bool ColumnDescriptor::operator<(const ColumnDescriptor &t) const {
+    return name < t.name;
 }

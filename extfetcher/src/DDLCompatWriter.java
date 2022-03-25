@@ -5,6 +5,7 @@ import com.alibaba.druid.sql.dialect.mysql.ast.MySqlKey;
 import com.alibaba.druid.sql.dialect.mysql.ast.MySqlPrimaryKey;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlAlterTableAlterColumn;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
+import org.apache.ibatis.jdbc.SQL;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -17,10 +18,9 @@ public class DDLCompatWriter {
         BufferedWriter writer = new BufferedWriter(ddlFileWriter);
         if (statement instanceof MySqlCreateTableStatement) {
             dealCreateTable(writer, (MySqlCreateTableStatement) statement);
-        }
-        if (statement instanceof SQLAlterTableStatement) {
+        } else if (statement instanceof SQLAlterTableStatement) {
             dealAlterTable(writer, (SQLAlterTableStatement) statement);
-        }
+        } else System.out.println("Not handled DDL!");
         writer.close();
     }
 
@@ -111,11 +111,32 @@ public class DDLCompatWriter {
                 writer.newLine();
             } else writer.write("0");
             writer.newLine();
-        }
-        if (item instanceof SQLAlterTableAddIndex) {
+        } else if (item instanceof SQLAlterTableDropColumnItem) {
+            SQLAlterTableDropColumnItem dropColItem = (SQLAlterTableDropColumnItem) item;
+            writer.write("DROPCOL");
+            writer.newLine();
+            writer.write(dropColItem.getColumns().get(0).getSimpleName());
+            writer.newLine();
+        } else if (item instanceof SQLAlterTableAddIndex) {
             writer.write("NOTHING");
             writer.newLine();
+        } else if (item instanceof SQLAlterTableDropIndex) {
+            SQLAlterTableDropIndex dropIndex = (SQLAlterTableDropIndex) item;
+            writer.write("DROPINDEX");
+            writer.newLine();
+            writer.write("0");
+            writer.newLine();
+            writer.write(String.valueOf(dropIndex.getIndexName()));
+            writer.newLine();
+        } else if (item instanceof SQLAlterTableDropPrimaryKey) {
+            writer.write("DROPINDEX");
+            writer.newLine();
+            writer.write("1");
+            writer.newLine();
+        } else {
+            System.out.println("Not handled Alter!" + statement + " which should be " + item.getClass());
         }
+
     }
 
     public static boolean checkIfNotNull(List<SQLColumnConstraint> contraintList) {
