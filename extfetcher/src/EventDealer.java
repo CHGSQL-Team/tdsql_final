@@ -71,7 +71,7 @@ public class EventDealer {
 
 
     public void dealEventData(QueryLogEvent event) throws IOException {
-        if (event.getQuery().equals("BEGIN")) return;
+        if (event.getQuery().equals("BEGIN") || event.getQuery().equals("COMMIT")) return;
         SQLStatement statement_ = SQLParser.parse(event.getQuery());
         String dbName = event.getDbName();
 //        System.out.println(event.getQuery());

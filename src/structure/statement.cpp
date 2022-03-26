@@ -152,7 +152,7 @@ Statement *Statement::getStatement(const boost::filesystem::path &path, const bo
     type = helper.getLine();
     if (type == "CREATE") return CreateTableStatement::getCreateTableStatement(helper);
     else if (type == "ALTER") return AlterStatement::getAlterStatement(helper);
-    else throw std::runtime_error("Unknown type of statement!");
+    else throw std::runtime_error("Unknown type of statement! " + type);
 }
 
 AlterDropColStatement::AlterDropColStatement(std::string colName) : AlterStatement(AlterType::DROPCOL),

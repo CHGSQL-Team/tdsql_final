@@ -4,15 +4,20 @@
 
 class Pusher{
 private:
-    WorkDescriptor* workDes;
-    Module* module;
+
 public:
+    std::string dbName,tableName;
+    boost::filesystem::path binlogPath;
+    int stateCount;
+    Module* module;
+
+
     explicit Pusher(WorkDescriptor *workDes, Module *module);
 
     void push();
 
-    void createFinalTable();
+    void createFinalTable() const;
     void pushFromFile();
 
-    void flushSQL(const std::string& sqlHeader,const std::string& sqlContent);
+    void flushSQL(const std::string& sqlHeader,const std::string& sqlContent) const;
 };

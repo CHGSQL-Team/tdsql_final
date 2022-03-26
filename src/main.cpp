@@ -14,6 +14,10 @@ int main(int argc, char **argv) {
     WorkLoader workLoader(&module);
     workLoader.loadWorks();
     workLoader.printWorks();
-    Worker worker(&module);
-    worker.work();
+    // Worker should finalize first
+    {
+        Worker worker(&module);
+        worker.work();
+    }
+
 }

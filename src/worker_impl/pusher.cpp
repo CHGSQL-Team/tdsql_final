@@ -2,26 +2,31 @@
 #include "worker_impl/pusher.h"
 #include "utils/iohelper.h"
 
-Pusher::Pusher(WorkDescriptor *workDes, Module *module) : workDes(workDes), module(module) {
+// Pusher should not be reliant to work descriptor after creation!
+
+Pusher::Pusher(WorkDescriptor *workDes, Module *module) : dbName(workDes->db_name), tableName(workDes->table_name),
+                                                          binlogPath(workDes->binlogPath),
+                                                          stateCount(workDes->stateCount), module(module) {
 
 }
 
 void Pusher::push() {
     SQLInstance *instance = module->sqlPool->getSQLInstance();
-    instance->createDB(workDes->db_name);
-    instance->setSchema(workDes->db_name);
+    instance->createDB(dbName);
+    instance->setSchema(dbName);
+    delete instance;
     createFinalTable();
     pushFromFile();
 }
 
-void Pusher::createFinalTable() {
+void Pusher::createFinalTable() const {
     SQLInstance *instance = module->sqlPool->getSQLInstance();
-    instance->createDB(workDes->db_name);
-    instance->setSchema(workDes->db_name);
-    instance->dropTable(workDes->table_name);
+    instance->createDB(dbName);
+    instance->setSchema(dbName);
+    instance->dropTable(tableName);
     std::vector<std::string> tableDDL;
-    for (int state = 0; state < workDes->stateCount; state++) {
-        boost::filesystem::path ddlFilePath = workDes->binlogPath / "0" / (std::to_string(state) + ".ddlsql");
+    for (int state = 0; state < stateCount; state++) {
+        boost::filesystem::path ddlFilePath = binlogPath / "0" / (std::to_string(state) + ".ddlsql");
         std::ifstream ddlFile(ddlFilePath.c_str());
         std::stringstream ss;
         ss << ddlFile.rdbuf();
@@ -30,11 +35,12 @@ void Pusher::createFinalTable() {
     for (const auto &ddl: tableDDL) {
         instance->executeRaw(ddl);
     }
+    delete instance;
 }
 
 void Pusher::pushFromFile() {
-    std::string pushSQLHeader = std::string("INSERT INTO ") + "`" + workDes->table_name + "` VALUES ";
-    std::ifstream stream(workDes->binlogPath / "result.csv");
+    std::string pushSQLHeader = std::string("INSERT INTO ") + "`" + tableName + "` VALUES ";
+    std::ifstream stream(binlogPath / "result.csv");
     IOHelper ioHelper(&stream);
     std::string line;
     std::string pushSQLContent;
@@ -56,15 +62,14 @@ void Pusher::pushFromFile() {
         flushSQL(pushSQLHeader, pushSQLContent);
 }
 
-void Pusher::flushSQL(const std::string &sqlHeader, const std::string &sqlContent) {
+void Pusher::flushSQL(const std::string &sqlHeader, const std::string &sqlContent) const {
     SQLInstance *instance = module->sqlPool->getSQLInstance();
-    instance->setSchema(workDes->db_name);
+    instance->setSchema(dbName);
     try {
         instance->executeRaw(sqlHeader + sqlContent);
     } catch (sql::SQLException &exception) {
         std::cout << "FAILED INSERT!!!!" << std::endl;
         std::cout << sqlHeader + sqlContent << std::endl;
     }
-
     delete instance;
 }

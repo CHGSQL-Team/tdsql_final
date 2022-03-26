@@ -1,5 +1,4 @@
 #pragma once
-#define NULL_PLACEHOLDER _NUll_&
 
 #include <string>
 
@@ -16,13 +15,12 @@ public:
     std::size_t seed = 2022;
     std::string class_path = "../extfetcher/build/production/extfetcher";
     std::string jar_path = "../extfetcher/libs/";
-    static std::string null_placeholder;
 
     int hash_split_threshold = 4000000;
-    int push_split_threshold = 1000;
+    int push_split_threshold = 10000;
     int subworker_threads = 2; //should be set to 2 now
     int hasher_threads = 12;
-    int pusher_threads = 40;
+    int pusher_threads = 10;
     int reducer_threads = 12;
     int primary_key_recovery_threads = 5;
 

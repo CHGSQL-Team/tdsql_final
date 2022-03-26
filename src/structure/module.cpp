@@ -6,10 +6,12 @@ Module::Module(Config *_config) : config(_config) {
     _init();
     logger = new Logger(config->log_path);
     sqlPool = new SQLPool(config);
+    pusherPool = new boost::asio::thread_pool(config->pusher_threads);
 }
 
 Module::~Module() {
-
+    delete sqlPool;
+    delete pusherPool;
 }
 
 void Module::_init() const {

@@ -8,4 +8,6 @@ public:
     explicit Worker(Module* module);
 
     void work();
+
+    ~Worker();
 };

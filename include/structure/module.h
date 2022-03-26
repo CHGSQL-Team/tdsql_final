@@ -18,6 +18,7 @@ public:
     Logger *logger;
     Timed timed;
     Works works;
+    boost::asio::thread_pool *pusherPool;
 
     explicit Module(Config *_config);
 
