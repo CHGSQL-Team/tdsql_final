@@ -145,7 +145,7 @@ void Table::dropUniqueIndex(bool isPrimary, bool isTemp, const std::string &inde
             return index->name == indexName;
     });
     if (toDrop == indexs.end()) {
-        std::cout << "Can not find index to drop. May be the index is ignored at the very first. It is okay!"
+        std::cout << "[Table] Can not find index to drop. May be the index is ignored at the very first. It is okay!"
                   << std::endl;
         return;
     }

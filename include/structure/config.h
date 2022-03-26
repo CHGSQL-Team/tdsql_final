@@ -1,4 +1,5 @@
 #pragma once
+#define NULL_PLACEHOLDER _NUll_&
 
 #include <string>
 
@@ -15,6 +16,7 @@ public:
     std::size_t seed = 2022;
     std::string class_path = "../extfetcher/build/production/extfetcher";
     std::string jar_path = "../extfetcher/libs/";
+    static std::string null_placeholder;
 
     int hash_split_threshold = 4000000;
     int push_split_threshold = 1000;

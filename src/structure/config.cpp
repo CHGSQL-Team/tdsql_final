@@ -2,6 +2,8 @@
 #include <cstring>
 #include <iostream>
 
+std::string Config::null_placeholder = "_NUll_&";
+
 Config::Config(char **argv) {
     sql_ip[0] = std::string(argv[1]);
     sql_port[0] = std::stoi(std::string(argv[2]));

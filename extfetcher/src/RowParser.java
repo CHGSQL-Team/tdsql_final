@@ -62,6 +62,10 @@ public class RowParser {
                     else builder.append(buffer.getValue().toString());
                     builder.append("\",");
                 }
+            } else{
+                if (isAfter) {
+                    builder.append("\"_NUll_&\",");
+                }
             }
         }
         if (isAfter) {

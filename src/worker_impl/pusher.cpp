@@ -1,3 +1,4 @@
+#include <boost/algorithm/string.hpp>
 #include "worker_impl/pusher.h"
 #include "utils/iohelper.h"
 
@@ -39,6 +40,7 @@ void Pusher::pushFromFile() {
     std::string pushSQLContent;
     int contentCount = 0;
     while (!(line = ioHelper.getLine()).empty()) {
+        boost::replace_all(line, "'_NUll_&'", "null");
         if (contentCount) pushSQLContent += ",";
         pushSQLContent += "(";
         pushSQLContent += line;
