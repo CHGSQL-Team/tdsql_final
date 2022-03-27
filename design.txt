@@ -1,6 +1,6 @@
 class Table
 
-    String dbName,tableName;
+    WorkDescriptor* workDes 表示其属于哪一个work
 
     int colPhy; 表示物理存储中用到第几列;
 
@@ -15,6 +15,7 @@ class Table
     Vector <UniqueIndex*> indexs 用于存储唯一索引
 
     UniqueIndex *priIndex; 当唯一索引不存在时，用于充当临时索引（除update_date外均为主键）
+    ##注：创建表的时候就应准备维护！
 
     void addColumn(ColumnDescriptor newCol, String after) / (ColumnDescriptor newCol)
         根据名称，在colDes的对应位置插入传入的ColumnDescriptor，填上Descriptor的Table*
@@ -31,25 +32,26 @@ class Table
         根据名称搜索到ColumnDescriptor*
         搜索所有的唯一索引，如果有索引包含这个Col的，将这个Col在本索引中删除。如果本索引空了，删除索引。如果索引没被删除，就reCompute
         删除colDes中的这个列
-        如果表中索引空了，启用priIndex并reCompute
+        如果表中索引空了，启用priIndex
         删除列名到这个Descriptor的映射
 
     void dropUniqueIndex(String indexName)
         搜索indexs,将对应index直接删除
 
-    void changeCol(String colName, ColumnDescriptor newCol)
+    void changeCol(String colName, ColumnDescriptor* newCol)
         搜索colName,直接替换为newCol（需要记得填充newCol中的一些信息）
 
-
+    int checkRow(Row* row)
+        遍历临时主键或唯一索引，进行其上的checkRow操作
 
 
 class ColumnDescriptor
 
-    int name; 表示该列名称
+    String name; 表示该列名称
 
     int mapping; 表示dat文件中一行的数据应该怎样映射到row的data中。mapping = 3 表示该列数据应该存储到rows.data[3]
 
-    String default; 表示该列的默认值
+    String def; 表示该列的默认值
 
 
 class Row
@@ -58,7 +60,7 @@ class Row
 
     int source; 表示该行是从哪一个源导入的
 
-    int timestamp; 表示该行在该源导入的时间戳
+    time_t timestamp; 表示该行在该源导入的时间戳
 
 
 class UniqueIndex
@@ -71,13 +73,19 @@ class UniqueIndex
 
     Unordered_map<hashsize_t, Row*> 存储这个Index的Hash映射
 
+    int hashPhy[] 表示hash值是从哪几个物理列获取的
+
 
     void reCompute();
         清空Hash映射，遍历表中所有行
-        若在映射中出现key重复，则做如下处理：
-            首先查看map中row的updated_at,若不同，则更新map,删除旧记录，将rows中的旧记录设置为null
-            若updated_at相同，则选择source更小的那个
-            若source也相同，则选择timestamp更小的那个
+
+    int checkRow(Row* row)
+    搜索是否有和row的hash值相同的
+        若无，则返回0
+        若有
+            如果传入的键比较新，即替换旧数据，返回1
+            如果传入的键比较旧，即什么都不做，返回-1
+
 
 
 DDL描述 ----------------
@@ -110,4 +118,23 @@ ALTER
     是否指定在某个列之后
     [某个列]
     ---
+    DROPCOL
+    列名
+    ---
+    DROPINDEX
+    是否为主键
+    [index名称]
+    ---
+    ADDINDEX
+    是否为主键
+    [index]名称
+    列的数量
+    (列的名称)
+    ---
+    CHANGECOL
+    新列名
+    是否为not null
+    是否有默认值
+    [默认值]
+    原列名
 
