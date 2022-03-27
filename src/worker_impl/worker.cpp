@@ -12,7 +12,8 @@ void Worker::work() {
         WorkDescriptor *workDes = i;
         auto *subWorker = new SubWorker(module, workDes);
 
-        if ((i->table_name == "a" || i->table_name == "b" || i->table_name == "c" || i->table_name == "d")) {
+        // We are really PASSING this !!!!
+//        if (!(i->table_name == "a" || i->table_name == "b" || i->table_name == "c" || i->table_name == "d")) {
             std::cout << "[Worker] Begin to work table " + i->db_name + "/" + i->table_name << std::endl;
             module->timed.printElapsedTime();
             subWorker->work();
@@ -23,7 +24,7 @@ void Worker::work() {
 //                module->timed.printElapsedTime();
 //                delete subWorker;
 //            });
-        }
+//        }
     }
 }
 

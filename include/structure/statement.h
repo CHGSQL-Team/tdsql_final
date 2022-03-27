@@ -53,6 +53,8 @@ public:
     std::string *defaultStr = nullptr;
 
     void print() const;
+
+    explicit ColumnStatement(IOHelper &helper);
 };
 
 class IndexStatement {
@@ -77,7 +79,10 @@ public:
 
 class AlterAddColStatement : public AlterStatement {
 public:
+    // Deprecated!
     AlterAddColStatement(ColumnStatement colStat, std::string *insAfter);
+
+    explicit AlterAddColStatement(IOHelper &ioHelper);
 
     ColumnStatement colStat;
     std::string *insAfter;
@@ -100,7 +105,10 @@ class AlterDropColStatement : public AlterStatement {
 public:
     std::string colName;
 
+    // Deprecated!
     explicit AlterDropColStatement(std::string colName);
+
+    explicit AlterDropColStatement(IOHelper &ioHelper);
 
     void print() override;
 
@@ -117,4 +125,30 @@ public:
     void fillToTable(Table *table) override;
 
     explicit AlterDropIndexStatement(IOHelper &ioHelper);
+};
+
+class AlterAddIndexStatement : public AlterStatement {
+public:
+    bool isPrimary;
+    std::string indexName;
+    std::set<std::string> cols;
+
+    void print() override;
+
+    void fillToTable(Table *table) override;
+
+    explicit AlterAddIndexStatement(IOHelper &ioHelper);
+};
+
+class AlterChangeColStatement : public AlterStatement {
+public:
+    std::string prevName;
+
+    explicit AlterChangeColStatement(IOHelper &ioHelper);
+
+    ColumnStatement colStat;
+
+    void print() override;
+
+    void fillToTable(Table *table) override;
 };

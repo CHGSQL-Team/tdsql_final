@@ -45,7 +45,8 @@ void Table::print(int trunc) {
     UniformLog log("Print Table", workDes->db_name + "/" + workDes->table_name);
     std::cout << "Showing indexs" << std::endl;
     for (auto index: indexs) {
-        std::cout << "Name: " << index->name << ", Cols: ";
+        std::cout << "Name: " << index->name << ", " << (index->isPrimary ? "PRIMARY KEY, " : ", ")
+                  << (index->isTemp ? "TEMP, " : ", ") << "Cols: ";
         for (auto col: index->cols) {
             std::cout << col->name << ",";
         }
@@ -96,8 +97,14 @@ size_t Table::getPhyPosArray(int *&array) {
     return size;
 }
 
-void Table::addUniqueIndex(const std::string &name, const std::set<std::string> &colNames, bool isPrimary) {
+void Table::addUniqueIndex(std::string name, const std::set<std::string> &colNames, bool isPrimary) {
+    if (indexs.size() != 1) throw std::runtime_error("Size of indexs not equal to 1 when doing addUniqueIndex!");
+    auto index = indexs.begin();
+    if (!(*index)->isTemp) throw std::runtime_error("Trying to insert a second non-temporary index!");
+    delete *index;
+    indexs.erase(index);
 
+    indexs.push_back(new UniqueIndex(this, std::move(name), colNames, isPrimary));
 }
 
 void Table::dumpToFile(const boost::filesystem::path &path) {
@@ -225,6 +232,7 @@ void UniqueIndex::reCompute() {
     hash.clear();
     size_t rowCount = table->rows.size();
     for (size_t i = 0; i < rowCount; i++) {
+        if (table->rows[i] == nullptr) continue;
         int checkRes = checkRow(table->rows[i]);
         if (checkRes == 0) {
             updateRow(table->rows[i]);

@@ -5,7 +5,7 @@
 #include "utils/uniformlog.h"
 #include "boost/asio/post.hpp"
 
-SubWorker::SubWorker(Module *module, WorkDescriptor *workDes) : module(module), workDes(workDes), traceIndex(0) {
+SubWorker::SubWorker(Module *module, WorkDescriptor *workDes) : module(module), workDes(workDes){
 
 }
 

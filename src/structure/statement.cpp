@@ -11,12 +11,7 @@ CreateTableStatement::CreateTableStatement(IOHelper &helper) {
     int colCount = helper.getLineInt();
     name = tableName;
     for (int i = 0; i < colCount; i++) {
-        std::string colName = helper.getLine();
-        std::string defValue;
-        int isNotNull = helper.getLineInt();
-        int isDef = helper.getLineInt();
-        if (isDef) defValue = helper.getLine();
-        cols.push_back({colName, static_cast<bool>(isNotNull), isDef ? new std::string(defValue) : nullptr});
+        cols.emplace_back(helper);
     }
     int idxCount = helper.getLineInt();
     for (int i = 0; i < idxCount; i++) {
@@ -73,28 +68,18 @@ CreateTableStatement *CreateTableStatement::getCreateTableStatement(IOHelper &io
 AlterStatement *AlterStatement::getAlterStatement(IOHelper &helper) {
     std::string typeStr = helper.getLine();
     if (typeStr == "ADDCOL") {
-        std::string colName = helper.getLine();
-        int isNotNull = helper.getLineInt();
-        int isDef = helper.getLineInt();
-        std::string *def = nullptr;
-        if (isDef)
-            def = new std::string(helper.getLine());
-        int isAfterCol = helper.getLineInt();
-        std::string *after = nullptr;
-        if (isAfterCol)
-            after = new std::string(helper.getLine());
-        ColumnStatement colStat{colName, static_cast<bool>(isNotNull), def};
-        return new AlterAddColStatement(colStat, after);
+        return new AlterAddColStatement(helper);
     } else if (typeStr == "NOTHING") {
         return new AlterNothingStatement();
     } else if (typeStr == "DROPCOL") {
-        std::string colName = helper.getLine();
-        return new AlterDropColStatement(colName);
+        return new AlterDropColStatement(helper);
     } else if (typeStr == "DROPINDEX") {
         return new AlterDropIndexStatement(helper);
-    } else
-        throw std::runtime_error("Alter type no implemented!");
-    return nullptr;
+    } else if (typeStr == "ADDINDEX") {
+        return new AlterAddIndexStatement(helper);
+    } else if (typeStr == "CHANGECOL") {
+        return new AlterChangeColStatement(helper);
+    } else throw std::runtime_error("Alter type no implemented!");
 }
 
 AlterStatement::AlterStatement(AlterType type) : type(type) {
@@ -119,12 +104,27 @@ void AlterAddColStatement::fillToTable(Table *table) {
     table->addColumn(newCol, insAfter);
 }
 
+AlterAddColStatement::AlterAddColStatement(IOHelper &ioHelper) : AlterStatement(AlterType::ADDCOL), colStat(ioHelper) {
+    int isAfterCol = ioHelper.getLineInt();
+    insAfter = nullptr;
+    if (isAfterCol)
+        insAfter = new std::string(ioHelper.getLine());
+}
+
 void ColumnStatement::print() const {
     std::cout << "Col name: " << name << ", " << (isNotNull ? "NOT NULL" : "CAN NULL");
     if (defaultStr) {
         std::cout << ", Default:" << *defaultStr;
     }
     std::cout << std::endl;
+}
+
+ColumnStatement::ColumnStatement(IOHelper &helper) {
+    name = helper.getLine();
+    isNotNull = helper.getLineInt();
+    if (helper.getLineInt() == 1) {
+        defaultStr = new std::string(std::move(helper.getLine()));
+    } else defaultStr = nullptr;
 }
 
 void AlterNothingStatement::print() {
@@ -169,6 +169,10 @@ void AlterDropColStatement::fillToTable(Table *table) {
     table->dropColumn(colName);
 }
 
+AlterDropColStatement::AlterDropColStatement(IOHelper &ioHelper) : AlterStatement(AlterType::DROPCOL) {
+    colName = ioHelper.getLine();
+}
+
 void AlterDropIndexStatement::fillToTable(Table *table) {
     table->dropUniqueIndex(isPrimary, false, indexName);
 }
@@ -182,5 +186,51 @@ AlterDropIndexStatement::AlterDropIndexStatement(IOHelper &ioHelper) : AlterStat
     isPrimary = ioHelper.getLineInt();
     if (!isPrimary) {
         indexName = ioHelper.getLine();
+    }
+}
+
+AlterChangeColStatement::AlterChangeColStatement(IOHelper &ioHelper) : AlterStatement(AlterType::CHANGECOL),
+                                                                       colStat(ioHelper) {
+    prevName = ioHelper.getLine();
+}
+
+void AlterChangeColStatement::print() {
+    UniformLog log("AlterChangeColStatement");
+    std::cout << "Prev col: " << prevName << ", new col:" << std::endl;
+    colStat.print();
+}
+
+void AlterChangeColStatement::fillToTable(Table *table) {
+    auto prevCol = std::find_if(table->colDes.begin(), table->colDes.end(), [=](const ColumnDescriptor *col) {
+        return col->name == prevName;
+    });
+    if (prevCol == table->colDes.end()) throw std::runtime_error("Can not find column to change!");
+    (*prevCol)->name = colStat.name;
+    delete (*prevCol)->def;
+    (*prevCol)->def = colStat.defaultStr;
+}
+
+void AlterAddIndexStatement::print() {
+    UniformLog log("AlterAddIndexStatement");
+    std::cout << (isPrimary ? "PRIMARY KEY" : ("Name: " + indexName)) << std::endl;
+    std::cout << "Columns: ";
+    for (const auto &col: cols) {
+        std::cout << col << ", ";
+    }
+    std::cout << std::endl;
+}
+
+void AlterAddIndexStatement::fillToTable(Table *table) {
+
+    table->addUniqueIndex(isPrimary ? "" : indexName, cols, isPrimary);
+}
+
+AlterAddIndexStatement::AlterAddIndexStatement(IOHelper &ioHelper) : AlterStatement(AlterType::ADDINDEX) {
+    isPrimary = ioHelper.getLineInt();
+    if (!isPrimary)
+        indexName = ioHelper.getLine();
+    int colCount = ioHelper.getLineInt();
+    for (int i = 0; i < colCount; i++) {
+        cols.insert(ioHelper.getLine());
     }
 }

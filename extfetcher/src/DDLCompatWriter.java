@@ -3,14 +3,18 @@ import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.mysql.ast.MySqlKey;
 import com.alibaba.druid.sql.dialect.mysql.ast.MySqlPrimaryKey;
+import com.alibaba.druid.sql.dialect.mysql.ast.MySqlUnique;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlAlterTableAlterColumn;
+import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlAlterTableChangeColumn;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
+import com.alibaba.druid.sql.dialect.mysql.ast.statement.MysqlAlterTableAlterCheck;
 import org.apache.ibatis.jdbc.SQL;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DDLCompatWriter {
@@ -133,8 +137,52 @@ public class DDLCompatWriter {
             writer.newLine();
             writer.write("1");
             writer.newLine();
+        } else if (item instanceof SQLAlterTableAddConstraint) {
+            SQLAlterTableAddConstraint addConst = (SQLAlterTableAddConstraint) item;
+            writer.write("ADDINDEX");
+            writer.newLine();
+            List<SQLSelectOrderByItem> cols = null;
+            if (addConst.getConstraint() instanceof MySqlPrimaryKey) {
+                MySqlPrimaryKey constraint = (MySqlPrimaryKey) addConst.getConstraint();
+                writer.write("1");
+                writer.newLine();
+                cols = constraint.getColumns();
+            } else if (addConst.getConstraint() instanceof MySqlUnique) {
+                MySqlUnique constraint = (MySqlUnique) addConst.getConstraint();
+                writer.write("0");
+                writer.newLine();
+                writer.write(constraint.getName().getSimpleName());
+                writer.newLine();
+                cols = constraint.getColumns();
+            } else System.out.println("Unknown constraint!");
+
+            assert cols != null;
+            writer.write(Integer.toString(cols.size()));
+            writer.newLine();
+            for (SQLSelectOrderByItem col : cols) {
+                writer.write(col.toString());
+                writer.newLine();
+            }
+        } else if (item instanceof MySqlAlterTableChangeColumn) {
+            writer.write("CHANGECOL");
+            writer.newLine();
+            MySqlAlterTableChangeColumn chCol = (MySqlAlterTableChangeColumn) item;
+            SQLColumnDefinition def = chCol.getNewColumnDefinition();
+            writer.write(def.getColumnName());
+            writer.newLine();
+            if (def.containsNotNullConstaint()) writer.write("1");
+            else writer.write("0");
+            writer.newLine();
+            if (def.getDefaultExpr() != null) {
+                writer.write("1");
+                writer.newLine();
+                writer.write(def.getDefaultExpr().toString().replace("'", ""));
+            } else writer.write("0");
+            writer.newLine();
+            writer.write(chCol.getColumnName().getSimpleName());
+            writer.newLine();
         } else {
-            System.out.println("Not handled Alter!" + statement + " which should be " + item.getClass());
+            System.out.println("Not handled Alter! " + statement + " which should be " + item.getClass());
         }
 
     }

@@ -27,7 +27,7 @@ public:
 
     void addColumn(ColumnDescriptor *newCol, std::string *after);
 
-    void addUniqueIndex(const std::string &name, const std::set<std::string> &colNames, bool isPrimary);
+    void addUniqueIndex(std::string name, const std::set<std::string> &colNames, bool isPrimary);
 
     void dropColumn(const std::string &colName);
 
