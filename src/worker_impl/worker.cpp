@@ -12,29 +12,26 @@ void Worker::work() {
         WorkDescriptor *workDes = i;
         auto *subWorker = new SubWorker(module, workDes);
 
-        if ((i->db_name == "a" || i->db_name == "b" || i->db_name == "c") &&
-            (i->table_name == "a" || i->table_name == "b" || i->table_name == "c")) {
+        if ((i->table_name == "a" || i->table_name == "b" || i->table_name == "c" || i->table_name == "d")) {
             std::cout << "[Worker] Begin to work table " + i->db_name + "/" + i->table_name << std::endl;
             module->timed.printElapsedTime();
             subWorker->work();
-            std::cout << "[Worker] Work for table " + i->db_name + "/" + i->table_name << " completed. Begin to push."
-                      << std::endl;
             module->timed.printElapsedTime();
-            auto *pusher = new Pusher(workDes, module);
             delete subWorker;
-            boost::asio::post(*module->pusherPool,
-                              [=] {
-                                  pusher->push();
-                                  std::cout << "[Worker] Pushing table " + pusher->dbName + "/" + pusher->tableName
-                                            << " completed." << std::endl;
-                                  module->timed.printElapsedTime();
-                                  delete pusher;
-                              });
+//            boost::asio::post(*module->subworkerPool, [=] {
+//                subWorker->work();
+//                module->timed.printElapsedTime();
+//                delete subWorker;
+//            });
         }
     }
 }
 
 Worker::~Worker() {
+    module->subworkerPool->join();
+    delete module->subworkerPool;
+    module->subworkerPool = nullptr;
+    module->pusherPool->join();
     delete module->pusherPool;
     module->pusherPool = nullptr;
 }

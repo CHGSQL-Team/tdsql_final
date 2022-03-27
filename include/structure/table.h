@@ -37,17 +37,19 @@ public:
 
     void insertRows(std::vector<Row *> &newRows);
 
-    void insertRow(Row *newRow);
+    void insertRow(Row *newRow,UniqueIndex* index);
 
     void print(int trunc);
 
     size_t getPhyPosArray(int *&array);
 
-    void dumpToFile(boost::filesystem::path path);
+    void dumpToFile(const boost::filesystem::path& path);
 
     void doRowReplace(Row *oldRow, Row *newRow);
 
     ~Table();
+
+    void optimizeTableForDump();
 
 };
 

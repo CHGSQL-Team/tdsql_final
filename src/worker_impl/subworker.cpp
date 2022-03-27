@@ -1,7 +1,9 @@
 #include "worker_impl/subworker.h"
+#include "worker_impl/pusher.h"
 #include "structure/statement.h"
 #include "utils/datparser.h"
 #include "utils/uniformlog.h"
+#include "boost/asio/post.hpp"
 
 SubWorker::SubWorker(Module *module, WorkDescriptor *workDes) : module(module), workDes(workDes), traceIndex(0) {
 
@@ -24,7 +26,20 @@ void SubWorker::work() {
         }
         workDes->table->print(20);
     }
+    workDes->table->optimizeTableForDump();
     workDes->table->dumpToFile(workDes->binlogPath / std::string("result.csv"));
+    std::cout << "[Worker] Work for table " + workDes->db_name + "/" + workDes->table_name << " completed. Begin to push."
+              << std::endl;
+    auto *pusher = new Pusher(workDes, module);
+    Module *module_ = module;
+    boost::asio::post(*module->pusherPool,
+                      [=] {
+                          pusher->push();
+                          std::cout << "[Worker] Pushing table " + pusher->dbName + "/" + pusher->tableName
+                                    << " completed." << std::endl;
+                          module_->timed.printElapsedTime();
+                          delete pusher;
+                      });
 }
 
 void SubWorker::Trace(Statement *statement_, int state) {

@@ -58,7 +58,8 @@ public class RowParser {
                 if (isAfter) {
                     builder.append("\"");
                     if (buffer.getValue() instanceof String)
-                        builder.append(unescaper.translate(StringEscapeUtils.escapeJava(buffer.getValue().toString())));
+                        EscapeConvert.convert((String) buffer.getValue(),builder);
+//                        builder.append(unescaper.translate(StringEscapeUtils.escapeJava(buffer.getValue().toString())));
                     else builder.append(buffer.getValue().toString());
                     builder.append("\",");
                 }

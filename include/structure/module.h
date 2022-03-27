@@ -19,6 +19,7 @@ public:
     Timed timed;
     Works works;
     boost::asio::thread_pool *pusherPool;
+    boost::asio::thread_pool *subworkerPool;
 
     explicit Module(Config *_config);
 

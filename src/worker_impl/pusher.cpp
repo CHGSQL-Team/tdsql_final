@@ -10,7 +10,7 @@ Pusher::Pusher(WorkDescriptor *workDes, Module *module) : dbName(workDes->db_nam
 
 }
 
-void Pusher::push() {
+void Pusher::push() const {
     SQLInstance *instance = module->sqlPool->getSQLInstance();
     instance->createDB(dbName);
     instance->setSchema(dbName);
@@ -30,7 +30,9 @@ void Pusher::createFinalTable() const {
         std::ifstream ddlFile(ddlFilePath.c_str());
         std::stringstream ss;
         ss << ddlFile.rdbuf();
-        tableDDL.push_back(ss.str());
+        if (module->config->compress_row)
+            tableDDL.push_back(ss.str() + " ROW_FORMAT = COMPRESSED KEY_BLOCK_SIZE = 32");
+        else tableDDL.push_back(ss.str());
     }
     for (const auto &ddl: tableDDL) {
         instance->executeRaw(ddl);
@@ -38,7 +40,7 @@ void Pusher::createFinalTable() const {
     delete instance;
 }
 
-void Pusher::pushFromFile() {
+void Pusher::pushFromFile() const {
     std::string pushSQLHeader = std::string("INSERT INTO ") + "`" + tableName + "` VALUES ";
     std::ifstream stream(binlogPath / "result.csv");
     IOHelper ioHelper(&stream);

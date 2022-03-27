@@ -14,10 +14,10 @@ public:
 
     explicit Pusher(WorkDescriptor *workDes, Module *module);
 
-    void push();
+    void push() const;
 
     void createFinalTable() const;
-    void pushFromFile();
+    void pushFromFile() const;
 
     void flushSQL(const std::string& sqlHeader,const std::string& sqlContent) const;
 };

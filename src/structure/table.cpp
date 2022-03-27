@@ -5,6 +5,13 @@
 #include <utility>
 #include <iomanip>
 
+inline bool compRows(Row *x, Row *y) {
+    if (!x && y) return true;
+    if (x && !y) return false;
+    if (!x) return false;
+    return x->data[0].size() < y->data[0].size() || (x->data[0].size() == y->data[0].size() && x->data[0] < y->data[0]);
+}
+
 Table::Table(WorkDescriptor *workDes) : workDes(workDes) {
 
 }
@@ -65,16 +72,14 @@ void Table::print(int trunc) {
 }
 
 void Table::insertRows(std::vector<Row *> &newRows) {
+    if (indexs.size() != 1) throw std::runtime_error("Index size should be 1!");
+    auto index = *(indexs.begin());
     for (const auto &row: newRows) {
-        insertRow(row);
+        insertRow(row, index);
     }
 }
 
-inline void Table::insertRow(Row *newRow) {
-    if (!updCol) throw std::runtime_error("updated_at col not found!");
-    if (indexs.size() != 1) throw std::runtime_error("Index size should be 1!");
-    auto index = *(indexs.begin());
-
+inline void Table::insertRow(Row *newRow, UniqueIndex *index) {
     if (index->checkRow(newRow) == 0) {
         index->updateRow(newRow);
         newRow->idxInsideTable = rows.size();
@@ -95,7 +100,7 @@ void Table::addUniqueIndex(const std::string &name, const std::set<std::string> 
 
 }
 
-void Table::dumpToFile(boost::filesystem::path path) {
+void Table::dumpToFile(const boost::filesystem::path &path) {
     std::ofstream stream(path.c_str());
     int *phyPos = nullptr;
     size_t size = getPhyPosArray(phyPos);
@@ -113,7 +118,7 @@ void Table::dumpToFile(boost::filesystem::path path) {
 void Table::doRowReplace(Row *oldRow, Row *newRow) {
     rows[oldRow->idxInsideTable] = newRow;
     newRow->idxInsideTable = oldRow->idxInsideTable;
-    delete oldRow; // TODO: will it cause problem?
+    delete oldRow;
 }
 
 void Table::dropColumn(const std::string &colName) {
@@ -160,6 +165,11 @@ Table::~Table() {
     for (const auto &index: indexs) {
         delete index;
     }
+}
+
+void Table::optimizeTableForDump() {
+    if (colDes.empty()) return;
+    std::sort(rows.begin(), rows.end(), compRows);
 }
 
 Row::Row(std::vector<std::string> &&data, int source, int stamp) : data(std::move(data)), source(source), stamp(stamp) {

@@ -7,11 +7,13 @@ Module::Module(Config *_config) : config(_config) {
     logger = new Logger(config->log_path);
     sqlPool = new SQLPool(config);
     pusherPool = new boost::asio::thread_pool(config->pusher_threads);
+    subworkerPool = new boost::asio::thread_pool(config->subworker_threads);
 }
 
 Module::~Module() {
     delete sqlPool;
     delete pusherPool;
+    delete subworkerPool;
 }
 
 void Module::_init() const {

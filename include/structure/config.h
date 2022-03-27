@@ -18,9 +18,9 @@ public:
 
     int hash_split_threshold = 4000000;
     int push_split_threshold = 10000;
-    int subworker_threads = 2; //should be set to 2 now
+    int subworker_threads = 2;
     int hasher_threads = 12;
-    int pusher_threads = 10;
+    int pusher_threads = 8;
     int reducer_threads = 12;
     int primary_key_recovery_threads = 5;
 
