@@ -30,12 +30,23 @@ void Pusher::createFinalTable() const {
         std::ifstream ddlFile(ddlFilePath.c_str());
         std::stringstream ss;
         ss << ddlFile.rdbuf();
-        if (module->config->compress_row)
-            tableDDL.push_back(ss.str() + " ROW_FORMAT = COMPRESSED KEY_BLOCK_SIZE = 32");
-        else tableDDL.push_back(ss.str());
+        std::string sqlStr = ss.str();
+        if (sqlStr.find("ADD KEY") != std::string::npos) {
+            std::cout << "[Pusher] Skipping add key." << std::endl;
+            continue;
+        }
+        if (module->config->compress_row && state == 0)
+            tableDDL.push_back(sqlStr + " ROW_FORMAT = COMPRESSED KEY_BLOCK_SIZE = 32");
+        else tableDDL.push_back(sqlStr);
+
     }
     for (const auto &ddl: tableDDL) {
-        instance->executeRaw(ddl);
+        try {
+            instance->executeRaw(ddl);
+        } catch (sql::SQLException &exception) {
+            std::cout << "[Pusher] Stage skipped because exception. Detail: " << exception.what() << std::endl;
+        }
+
     }
     delete instance;
 }
