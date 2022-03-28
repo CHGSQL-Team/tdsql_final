@@ -1,7 +1,5 @@
 import java.io.IOException;
 
-import com.github.shyiko.mysql.binlog.*;
-
 public class GtidResolver {
     public static String main(String gtidSetString) throws IOException {
         GtidSet gtidSet = new GtidSet(gtidSetString);
