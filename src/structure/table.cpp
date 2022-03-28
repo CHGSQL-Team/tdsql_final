@@ -117,7 +117,7 @@ void Table::dumpToFile(const boost::filesystem::path &path) {
             stream << std::quoted(row->data[phyPos[i]], '\'', '\\');
             if (i != size - 1) stream << ",";
         }
-        stream << std::endl;
+        stream << '\n';
     }
     stream.close();
 }
