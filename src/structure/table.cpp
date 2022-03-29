@@ -2,6 +2,7 @@
 #include "boost/container_hash/hash.hpp"
 #include <iostream>
 #include "utils/uniformlog.h"
+#include "utils/escapedstr.h"
 #include <utility>
 #include <iomanip>
 
@@ -114,7 +115,8 @@ void Table::dumpToFile(const boost::filesystem::path &path) {
     for (auto row: rows) {
         if (!row) continue;
         for (int i = 0; i < size; i++) {
-            stream << std::quoted(row->data[phyPos[i]], '\'', '\\');
+//            stream << std::quoted(row->data[phyPos[i]], '\'', '\\');
+            EscapedResolver::quotedToStream(row->data[phyPos[i]], stream);
             if (i != size - 1) stream << ",";
         }
         stream << '\n';

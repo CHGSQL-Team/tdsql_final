@@ -1,4 +1,6 @@
 #include "utils/escapedstr.h"
+#include <iostream>
+#include <fstream>
 
 void EscapedResolver::parseEscaped(std::vector<std::string> &vec, std::string &rawStr, size_t vecSize) {
     int curPos = 0;
@@ -16,6 +18,12 @@ void EscapedResolver::parseEscaped(std::vector<std::string> &vec, std::string &r
 }
 
 void EscapedResolver::quotedToStream(std::string &str, std::ofstream &stream) {
-
+    stream << '\'';
+    size_t size = str.size();
+    for (size_t i = 0; i < size; i++) {
+        if (str[i] == '\'') stream << "\\'";
+        else stream << str[i];
+    }
+    stream << '\'';
 }
 
