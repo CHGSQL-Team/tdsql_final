@@ -109,22 +109,18 @@ public class EventDealer {
                                 .resolve(tableAlterStateLookup.get(new ImmutablePair<>(dbName, tableName)).toString() + ".dat")
                                 .toFile()
                 ))));
-        try (BufferedWriter ddlWriter = new BufferedWriter(getFileWriter(
-                binlogFolder.resolve(dbName)
-                        .resolve(tableName)
-                        .resolve(index)
-                        .resolve(tableAlterStateLookup.get(new ImmutablePair<>(dbName, tableName)).toString() + ".ddlsql")
-                        .toFile()
-        ))) {
-            ddlWriter.write(statement.toString());
-        }
         DDLCompatWriter.writeDDLCompat(getFileWriter(
                 binlogFolder.resolve(dbName)
                         .resolve(tableName)
                         .resolve(index)
                         .resolve(tableAlterStateLookup.get(new ImmutablePair<>(dbName, tableName)).toString() + ".ddl")
                         .toFile()
-        ), statement);
+        ), getFileWriter(
+                binlogFolder.resolve(dbName)
+                        .resolve(tableName)
+                        .resolve(index)
+                        .resolve(tableAlterStateLookup.get(new ImmutablePair<>(dbName, tableName)).toString() + ".ddlsql")
+                        .toFile()),statement);
     }
 
     private void dropTableWriterAndDdlSql(String dbName) throws IOException {

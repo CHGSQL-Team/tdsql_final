@@ -1,34 +1,34 @@
-import com.alibaba.druid.sql.ast.SQLIndexDefinition;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.mysql.ast.MySqlKey;
 import com.alibaba.druid.sql.dialect.mysql.ast.MySqlPrimaryKey;
 import com.alibaba.druid.sql.dialect.mysql.ast.MySqlUnique;
-import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlAlterTableAlterColumn;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlAlterTableChangeColumn;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
-import com.alibaba.druid.sql.dialect.mysql.ast.statement.MysqlAlterTableAlterCheck;
-import org.apache.ibatis.jdbc.SQL;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 public class DDLCompatWriter {
-    public static void writeDDLCompat(FileWriter ddlFileWriter, SQLStatement statement) throws IOException {
-        BufferedWriter writer = new BufferedWriter(ddlFileWriter);
+    public static void writeDDLCompat(FileWriter ddlFileWriter, FileWriter ddlSqlFileWriter, SQLStatement statement) throws IOException {
+        BufferedWriter ddlwriter = new BufferedWriter(ddlFileWriter);
+        BufferedWriter ddlsqlwriter = new BufferedWriter(ddlSqlFileWriter);
         if (statement instanceof MySqlCreateTableStatement) {
-            dealCreateTable(writer, (MySqlCreateTableStatement) statement);
+            dealCreateTable(ddlwriter,ddlsqlwriter, (MySqlCreateTableStatement) statement);
         } else if (statement instanceof SQLAlterTableStatement) {
-            dealAlterTable(writer, (SQLAlterTableStatement) statement);
-        } else System.out.println("Not handled DDL!");
-        writer.close();
+            dealAlterTable(ddlwriter, (SQLAlterTableStatement) statement);
+            ddlsqlwriter.write(statement.toString());
+        } else {
+            ddlsqlwriter.write(statement.toString());
+            System.out.println("Not handled DDL!");
+        }
+        ddlwriter.close();
+        ddlsqlwriter.close();
     }
 
-    public static void dealCreateTable(BufferedWriter writer, MySqlCreateTableStatement statement) throws IOException {
+    public static void dealCreateTable(BufferedWriter writer, BufferedWriter ddlsqlwriter, MySqlCreateTableStatement statement) throws IOException {
         writer.write("CREATE");
         writer.newLine();
         writer.write(statement.getTableName().toString().replace("`", ""));
@@ -82,6 +82,8 @@ public class DDLCompatWriter {
                 writer.newLine();
             }
         }
+        statement.getTableElementList().removeIf(e -> e instanceof MySqlKey && ((MySqlKey) e).getIndexDefinition().getType() == null);
+        ddlsqlwriter.write(statement.toString());
     }
 
     public static <SQLALterTableAddIndex> void dealAlterTable(BufferedWriter writer, SQLAlterTableStatement statement) throws IOException {
