@@ -54,6 +54,7 @@ add_executable(run
         src/utils/datparser.cpp
         src/utils/uniformlog.cpp
         src/worker_impl/pusher.cpp
+        src/utils/escapedstr.cpp
         src/utils/semaphore.cpp
         )
 
