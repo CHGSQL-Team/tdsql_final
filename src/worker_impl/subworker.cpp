@@ -27,11 +27,17 @@ void SubWorker::work() {
         if (module->config->enable_print_table)
             workDes->table->print(20);
     }
+    std::cout << "[Worker] Start optimization of " + workDes->db_name + "/" + workDes->table_name << std::endl;
+    module->timed.printElapsedTime();
     workDes->table->optimizeTableForDump();
+    std::cout << "[Worker] End optimization of " + workDes->db_name + "/" + workDes->table_name << ". Start dumping"
+              << std::endl;
+    module->timed.printElapsedTime();
     workDes->table->dumpToFile(workDes->binlogPath / std::string("result.csv"));
-    std::cout << "[Worker] Work for table " + workDes->db_name + "/" + workDes->table_name
+    std::cout << "[Worker] Dumping for table " + workDes->db_name + "/" + workDes->table_name
               << " completed. Begin to push."
               << std::endl;
+    module->timed.printElapsedTime();
     if (!module->config->disable_pusher) {
         auto *pusher = new Pusher(workDes, module);
         Module *module_ = module;

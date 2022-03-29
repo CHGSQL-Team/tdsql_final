@@ -53,6 +53,10 @@ void Table::print(int trunc) {
         }
         std::cout << std::endl;
     }
+    std::cout << "Showing phyPos" << std::endl;
+    for (const auto &col: colDes) {
+        std::cout << col->name << ":" << col->mapping << std::endl;
+    }
     int printed = 0;
     int print_seq[colDes.size()];
     std::cout << "-------";
@@ -115,7 +119,6 @@ void Table::dumpToFile(const boost::filesystem::path &path) {
     for (auto row: rows) {
         if (!row) continue;
         for (int i = 0; i < size; i++) {
-//            stream << std::quoted(row->data[phyPos[i]], '\'', '\\');
             EscapedResolver::quotedToStream(row->data[phyPos[i]], stream);
             if (i != size - 1) stream << ",";
         }

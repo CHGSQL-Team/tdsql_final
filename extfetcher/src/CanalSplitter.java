@@ -1,3 +1,4 @@
+import com.alibaba.otter.canal.instance.manager.model.Canal;
 import com.taobao.tddl.dbsync.binlog.*;
 
 import java.io.*;
@@ -6,27 +7,24 @@ import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class CanalSplitter {
-    static EventDealer eventDealer;
-    static LogDecoder decoder = new LogDecoder(LogEvent.UNKNOWN_EVENT, LogEvent.ENUM_END_EVENT);
-    static LogContext context = new LogContext();
+    EventDealer eventDealer;
+    LogDecoder decoder = new LogDecoder(LogEvent.UNKNOWN_EVENT, LogEvent.ENUM_END_EVENT);
+    LogContext context = new LogContext();
 
-
-    static {
-        context.setLogPosition(new LogPosition("", 4));
-    }
 
     public static void main(String[] args) throws IOException {
-
-        doSplit(args[0], args[1], args[2], args[3]);
+        CanalSplitter splitter = new CanalSplitter();
+        splitter.doSplit(args[0], args[1], args[2], args[3]);
     }
 
     public static void portal(String arg) throws IOException {
-
         String[] args = arg.split(" ");
-        doSplit(args[0], args[1], args[2], args[3]);
+        CanalSplitter splitter = new CanalSplitter();
+        splitter.doSplit(args[0], args[1], args[2], args[3]);
     }
 
-    public static void doSplit(String eventBinPath, String eventLenPath, String binlogPath_, String sourceIndex) throws IOException {
+    public void doSplit(String eventBinPath, String eventLenPath, String binlogPath_, String sourceIndex) throws IOException {
+        context.setLogPosition(new LogPosition("", 4));
         File eventBinFile = new File(eventBinPath);
         File eventLenFile = new File(eventLenPath);
         Path binlogPath = Paths.get(binlogPath_);

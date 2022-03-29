@@ -25,9 +25,10 @@ std::vector<Row *> DATParser::parseData() {
     while (std::getline(stream, line)) {
         std::vector<std::string> lineRes;
         lineRes.resize(table->colPhy);
-        EscapedResolver::parseEscaped(lineRes, line, vecSize);
+        EscapedResolver::parseEscaped(lineRes, line, vecSize, insPos);
         Row *row = new Row(std::move(lineRes), source, stamp++);
         ret.push_back(row);
     }
+    delete insPos;
     return ret;
 }
