@@ -10,4 +10,6 @@ public:
     void work();
 
     ~Worker();
+
+    void i_am_not_willing_to_pass();
 };
