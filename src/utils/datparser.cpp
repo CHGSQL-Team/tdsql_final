@@ -1,4 +1,5 @@
 #include "utils/datparser.h"
+#include "utils/escapedstr.h"
 #include "boost/tokenizer.hpp"
 
 #include <iostream>
@@ -13,25 +14,15 @@ DATParser::DATParser(boost::filesystem::path datPath, int source, int &startStam
 
 std::vector<Row *> DATParser::parseData() {
     std::vector<Row *> ret;
-    boost::escaped_list_separator<char> separator('\\', ',', '\"');
     std::ifstream stream(datPath.c_str());
     std::cout << "datPath: " << datPath.c_str() << std::endl;
     std::string line;
-    Tokenizer tok(line, separator);
     int *insPos = nullptr;
     table->getPhyPosArray(insPos);
     while (std::getline(stream, line)) {
         std::vector<std::string> lineRes;
         lineRes.resize(table->colPhy);
-        try {
-            tok.assign(line);
-            int pos = 0;
-            for (Tokenizer::iterator it = tok.begin(); it != tok.end(); it++) {
-                lineRes[insPos[pos++]] = *it;
-            }
-        } catch (boost::wrapexcept<boost::escaped_list_error> &err) {
-            std::cout << "Escaped list error! " << line << std::endl;
-        }
+        EscapedResolver::parseEscaped(lineRes, line);
         Row *row = new Row(std::move(lineRes), source, stamp++);
         ret.push_back(row);
     }
