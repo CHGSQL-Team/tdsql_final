@@ -19,14 +19,13 @@ DATParser::DATParser(boost::filesystem::path datPath, int source, int &startStam
 std::vector<Row *> DATParser::parseData() {
     std::vector<Row *> ret;
     std::ifstream stream(datPath.c_str());
-    std::cout << "datPath: " << datPath.c_str() << std::endl;
     std::string line;
     int *insPos = nullptr;
-    table->getPhyPosArray(insPos);
+    size_t vecSize = table->getPhyPosArray(insPos);
     while (std::getline(stream, line)) {
         std::vector<std::string> lineRes;
         lineRes.resize(table->colPhy);
-        EscapedResolver::parseEscaped(lineRes, line);
+        EscapedResolver::parseEscaped(lineRes, line, vecSize);
         Row *row = new Row(std::move(lineRes), source, stamp++);
         ret.push_back(row);
     }

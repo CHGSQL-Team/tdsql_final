@@ -35,6 +35,8 @@ public:
     bool use_transation = false;
     bool try_use_myisam_engine = false;
     bool supress_jvm = false;
+    bool enable_print_table = false;
+    bool disable_pusher = false;
 
 
     void print_config() const;
