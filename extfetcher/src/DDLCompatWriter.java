@@ -31,7 +31,7 @@ public class DDLCompatWriter {
     public static void dealCreateTable(BufferedWriter writer, BufferedWriter ddlsqlwriter, MySqlCreateTableStatement statement) throws IOException {
         writer.write("CREATE");
         writer.newLine();
-        writer.write(statement.getTableName().toString().replace("`", ""));
+        writer.write(statement.getTableName().replace("`", ""));
         writer.newLine();
         writer.write(Integer.toString(statement.getColumnDefinitions().size()));
         writer.newLine();
@@ -82,7 +82,6 @@ public class DDLCompatWriter {
                 writer.newLine();
             }
         }
-        statement.getTableElementList().removeIf(e -> e instanceof MySqlKey && ((MySqlKey) e).getIndexDefinition().getType() == null);
         ddlsqlwriter.write(statement.toString());
     }
 
