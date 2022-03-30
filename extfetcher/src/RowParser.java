@@ -3,16 +3,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.text.translate.UnicodeUnescaper;
-
-
 import com.taobao.tddl.dbsync.binlog.*;
 import com.taobao.tddl.dbsync.binlog.event.*;
-import org.apache.commons.text.StringEscapeUtils;
 
 public class RowParser {
     protected static Charset charset = StandardCharsets.UTF_8;
-    protected static UnicodeUnescaper unescaper = new UnicodeUnescaper();
 
     public static String parseRowsEvent(RowsLogEvent event, AtomicLong sum) {
         StringBuilder ret = new StringBuilder();
@@ -59,7 +54,6 @@ public class RowParser {
                     builder.append("\"");
                     if (buffer.getValue() instanceof String)
                         EscapeConvert.convert((String) buffer.getValue(),builder);
-//                        builder.append(unescaper.translate(StringEscapeUtils.escapeJava(buffer.getValue().toString())));
                     else builder.append(buffer.getValue().toString());
                     builder.append("\",");
                 }

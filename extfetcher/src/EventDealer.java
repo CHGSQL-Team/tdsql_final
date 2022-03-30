@@ -1,5 +1,3 @@
-//import com.alibaba.otter.canal.protocol.CanalEntry;
-
 import java.io.*;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -11,20 +9,25 @@ import com.alibaba.druid.sql.ast.statement.SQLAlterTableStatement;
 import com.alibaba.druid.sql.ast.statement.SQLCreateDatabaseStatement;
 import com.alibaba.druid.sql.ast.statement.SQLCreateTableStatement;
 import com.alibaba.druid.sql.ast.statement.SQLDropDatabaseStatement;
+import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
 import com.taobao.tddl.dbsync.binlog.LogEvent;
 import com.taobao.tddl.dbsync.binlog.event.QueryLogEvent;
 import com.taobao.tddl.dbsync.binlog.event.RowsLogEvent;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import com.alibaba.druid.sql.repository.SchemaRepository;
+import com.alibaba.druid.util.JdbcConstants;
 
 public class EventDealer {
     Path binlogFolder;
     String index;
     HashMap<ImmutablePair<String, String>, Integer> tableAlterStateLookup = new HashMap<>();
     HashMap<ImmutablePair<String, String>, BufferedWriter> tableWriterLookup = new HashMap<>();
+    SchemaRepository repository;
 
     EventDealer(Path binlogFolder, String index) {
         this.binlogFolder = binlogFolder;
         this.index = index;
+        repository = new SchemaRepository(JdbcConstants.MYSQL);
     }
 
     public void closeAll() throws IOException {
@@ -40,6 +43,22 @@ public class EventDealer {
                 countWriter.write(Integer.toString(tableAlterStateLookup.get(key) + 1));
             }
         }
+
+        for (ImmutablePair<String, String> key :
+                tableAlterStateLookup.keySet()) {
+            try (BufferedWriter finalTableWriter = new BufferedWriter(getFileWriter(
+                    binlogFolder.resolve(key.left)
+                            .resolve(key.right)
+                            .resolve("finalTable.sql")
+                            .toFile()
+            ))) {
+                MySqlCreateTableStatement createTableStmt =
+                        (MySqlCreateTableStatement) repository.findSchema(key.left).findTable(key.right).getStatement();
+                FinalTableFineTuner.fineTune(createTableStmt);
+                finalTableWriter.write(createTableStmt.toString());
+            }
+        }
+
 
         for (BufferedWriter writer :
                 tableWriterLookup.values()) {
@@ -74,7 +93,8 @@ public class EventDealer {
         if (event.getQuery().equals("BEGIN") || event.getQuery().equals("COMMIT")) return;
         SQLStatement statement_ = SQLParser.parse(event.getQuery());
         String dbName = event.getDbName();
-//        System.out.println(event.getQuery());
+        repository.console("use `" + dbName + "`");
+        repository.console(event.getQuery());
         if (statement_ instanceof SQLCreateTableStatement) {
             SQLCreateTableStatement statement = (SQLCreateTableStatement) statement_;
             String tableName = statement.getTableName().replace("`", "");
@@ -110,17 +130,13 @@ public class EventDealer {
                                 .toFile()
                 ))));
         DDLCompatWriter.writeDDLCompat(getFileWriter(
-                binlogFolder.resolve(dbName)
-                        .resolve(tableName)
-                        .resolve(index)
+                binlogFolder.resolve(dbName).resolve(tableName).resolve(index)
                         .resolve(tableAlterStateLookup.get(new ImmutablePair<>(dbName, tableName)).toString() + ".ddl")
                         .toFile()
         ), getFileWriter(
-                binlogFolder.resolve(dbName)
-                        .resolve(tableName)
-                        .resolve(index)
+                binlogFolder.resolve(dbName).resolve(tableName).resolve(index)
                         .resolve(tableAlterStateLookup.get(new ImmutablePair<>(dbName, tableName)).toString() + ".ddlsql")
-                        .toFile()),statement);
+                        .toFile()), statement);
     }
 
     private void dropTableWriterAndDdlSql(String dbName) throws IOException {
