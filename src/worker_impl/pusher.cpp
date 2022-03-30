@@ -1,6 +1,7 @@
 #include <boost/algorithm/string.hpp>
 #include "worker_impl/pusher.h"
 #include "utils/iohelper.h"
+#include "utils/uniformlog.h"
 
 // Pusher should not be reliant to work descriptor after creation!
 
@@ -24,30 +25,20 @@ void Pusher::createFinalTable() const {
     instance->createDB(dbName);
     instance->setSchema(dbName);
     instance->dropTable(tableName);
-    std::vector<std::string> tableDDL;
-    for (int state = 0; state < stateCount; state++) {
-        boost::filesystem::path ddlFilePath = binlogPath / "0" / (std::to_string(state) + ".ddlsql");
-        std::ifstream ddlFile(ddlFilePath.c_str());
-        std::stringstream ss;
-        ss << ddlFile.rdbuf();
-        std::string sqlStr = ss.str();
-        if (sqlStr.find("ADD KEY") != std::string::npos) {
-            std::cout << "[Pusher] Skipping add key." << std::endl;
-            continue;
-        }
-        if (module->config->compress_row && state == 0)
-            tableDDL.push_back(sqlStr + " ROW_FORMAT = COMPRESSED KEY_BLOCK_SIZE = 32");
-        else tableDDL.push_back(sqlStr);
 
+    boost::filesystem::path ddlFilePath = binlogPath / std::string("finalTable.sql");
+    std::ifstream ddlFile(ddlFilePath.c_str());
+    std::stringstream ss;
+    ss << ddlFile.rdbuf();
+    std::string sqlStr = ss.str();
+    UniformLog log("Pusher", dbName + "/" + tableName);
+    std::cout << sqlStr << std::endl;
+    try {
+        instance->executeRaw(sqlStr);
+    } catch (sql::SQLException &exception) {
+        std::cout << "[Pusher] SQL exec failed. Detail: " << exception.what() << std::endl;
     }
-    for (const auto &ddl: tableDDL) {
-        try {
-            instance->executeRaw(ddl);
-        } catch (sql::SQLException &exception) {
-            std::cout << "[Pusher] Stage skipped because exception. Detail: " << exception.what() << std::endl;
-        }
 
-    }
     delete instance;
 }
 

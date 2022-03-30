@@ -75,8 +75,11 @@ void ExternalFetcher::evokeFetch(int index) {
             module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".binlen");
     std::vector<unsigned char> gtidPackage = std::move(retrieveGtidPackage(index));
     std::cout << "[ExtF] GTIDp size = " << gtidPackage.size() << std::endl;
+    std::cout << "[ExtF] Start dumping event for " << index << std::endl;
+    module->timed.printElapsedTime();
     dumpEventToFile(index, dumpPath.string(), gtidPackage);
-
+    std::cout << "[ExtF] Dumping end for " << index << std::endl;
+    module->timed.printElapsedTime();
 
     std::string callArg = boost::filesystem::canonical(dumpPath).string() + " " +
                           boost::filesystem::canonical(eventLenPath).string() + " " +
