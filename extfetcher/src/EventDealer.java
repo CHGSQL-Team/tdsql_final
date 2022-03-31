@@ -19,6 +19,7 @@ public class EventDealer {
     String index;
     HashMap<ImmutablePair<String, String>, Integer> tableAlterStateLookup = new HashMap<>();
     HashMap<ImmutablePair<String, String>, BufferedWriter> tableWriterLookup = new HashMap<>();
+    HashMap<String, Integer> dbDropPositionLookup = new HashMap<>();
     SchemaRepository repository;
 
     EventDealer(Path binlogFolder, String index) {
@@ -77,12 +78,19 @@ public class EventDealer {
         }
     }
 
-    public void dealEvent(LogEvent event) throws IOException {
+    public void dealEvent(LogEvent event, int position) throws IOException {
         if (event instanceof QueryLogEvent) {
-            dealEventData((QueryLogEvent) event);
+            Integer startingPos = dbDropPositionLookup.get(((QueryLogEvent) event).getDbName().replace("`", ""));
+            if (startingPos == null || startingPos > position) {
+                dealEventData((QueryLogEvent) event);
+            }
+
         }
         if (event instanceof RowsLogEvent) {
-            dealEventData((RowsLogEvent) event);
+            Integer startingPos = dbDropPositionLookup.get(((RowsLogEvent) event).getTable().getDbName().replace("`", ""));
+            if (startingPos == null || startingPos > position) {
+                dealEventData((RowsLogEvent) event);
+            }
         }
     }
 
@@ -92,7 +100,6 @@ public class EventDealer {
     }
 
     public void dealEventData(RowsLogEvent event) throws IOException {
-        AtomicLong sum = new AtomicLong(0);
         String dbName = event.getTable().getDbName();
         String tableName = event.getTable().getTableName().replace("`", "");
         String rowText = RowParser.parseRowsEvent(event);
@@ -158,4 +165,16 @@ public class EventDealer {
     }
 
 
+    public void proofEvent(LogEvent event, int position) {
+        if (event instanceof QueryLogEvent) {
+            QueryLogEvent queryLogEvent = (QueryLogEvent) event;
+            if (queryLogEvent.getQuery().contains("BEGIN") || queryLogEvent.getQuery().contains("COMMIT"))
+                return;
+            SQLStatement statement = SQLParser.parse(queryLogEvent.getQuery());
+            if (statement instanceof SQLDropDatabaseStatement) {
+                SQLDropDatabaseStatement ddStatment = (SQLDropDatabaseStatement) statement;
+                dbDropPositionLookup.put(ddStatment.getDatabaseName().replace("`", ""), position);
+            }
+        }
+    }
 }
