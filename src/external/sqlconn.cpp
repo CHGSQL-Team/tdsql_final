@@ -127,6 +127,10 @@ void SQLInstance::dropTable(const std::string &name) {
     delete stmt;
 }
 
+void SQLInstance::commit() {
+    con->commit();
+}
+
 SQLPool::SQLPool(Config *_config) {
     driver = get_driver_instance();
     config = _config;

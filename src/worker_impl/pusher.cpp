@@ -43,6 +43,10 @@ void Pusher::createFinalTable() const {
 }
 
 void Pusher::pushFromFile() const {
+    SQLInstance *instance = module->sqlPool->getSQLInstance();
+    instance->setSchema(dbName);
+    instance->setAutoCommit(false);
+    instance->executeRaw("SET unique_checks=0;");
     std::ifstream headerStream(binlogPath / std::string("finalTableCols.txt"));
     std::string pushSQLHeader = std::string("INSERT INTO ") + "`" + tableName + "` (";
     std::string line;
@@ -65,23 +69,21 @@ void Pusher::pushFromFile() const {
         pushSQLContent += ")";
         contentCount++;
         if (contentCount >= module->config->push_split_threshold) {
-            flushSQL(pushSQLHeader, pushSQLContent);
+            flushSQL(pushSQLHeader, pushSQLContent, instance);
             contentCount = 0;
             pushSQLContent.clear();
         }
     }
     if (contentCount)
-        flushSQL(pushSQLHeader, pushSQLContent);
+        flushSQL(pushSQLHeader, pushSQLContent, instance);
+    instance->commit();
 }
 
-void Pusher::flushSQL(const std::string &sqlHeader, const std::string &sqlContent) const {
-    SQLInstance *instance = module->sqlPool->getSQLInstance();
-    instance->setSchema(dbName);
+void Pusher::flushSQL(const std::string &sqlHeader, const std::string &sqlContent, SQLInstance *instance) {
     try {
         instance->executeRaw(sqlHeader + sqlContent);
     } catch (sql::SQLException &exception) {
         std::cout << "FAILED INSERT!!!! Because " << exception.what() << std::endl;
         std::cout << sqlHeader + sqlContent << std::endl;
     }
-    delete instance;
 }

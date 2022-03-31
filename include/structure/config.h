@@ -9,12 +9,12 @@ public:
     std::string sql_usr[3];
     std::string sql_pwd[3];
     std::string sql_gtid[2];
-//    std::string log_path = "/mnt/pmem0/logs/";
-//    std::string tmp_path = "/mnt/pmem0/tmp/";
-//    std::string binlog_path = "/mnt/pmem0/tmp/binlogs/";
-    std::string log_path = "./logs/";
-    std::string tmp_path = "./tmp/";
-    std::string binlog_path = "./tmp/binlogs/";
+    std::string log_path = "/mnt/logs/";
+    std::string tmp_path = "/mnt/tmp/";
+    std::string binlog_path = "/mnt/tmp/binlogs/";
+//    std::string log_path = "./logs/";
+//    std::string tmp_path = "./tmp/";
+//    std::string binlog_path = "./tmp/binlogs/";
     std::size_t seed = 2022;
     std::string class_path = "../extfetcher/build/production/extfetcher";
     std::string jar_path = "../extfetcher/libs/";

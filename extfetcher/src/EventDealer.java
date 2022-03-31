@@ -95,7 +95,7 @@ public class EventDealer {
         AtomicLong sum = new AtomicLong(0);
         String dbName = event.getTable().getDbName();
         String tableName = event.getTable().getTableName().replace("`", "");
-        String rowText = RowParser.parseRowsEvent(event, sum);
+        String rowText = RowParser.parseRowsEvent(event);
         tableWriterLookup.get(new ImmutablePair<>(dbName, tableName)).write(rowText);
     }
 

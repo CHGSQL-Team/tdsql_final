@@ -9,7 +9,7 @@ import com.taobao.tddl.dbsync.binlog.event.*;
 public class RowParser {
     protected static Charset charset = StandardCharsets.UTF_8;
 
-    public static String parseRowsEvent(RowsLogEvent event, AtomicLong sum) {
+    public static String parseRowsEvent(RowsLogEvent event) {
         StringBuilder ret = new StringBuilder();
         try {
             RowsLogBuffer buffer = event.getRowsBuf(charset.name());
@@ -28,7 +28,6 @@ public class RowParser {
                     }
                     parseOneRow(event, buffer, changeColumns, true, ret);
                 }
-                sum.incrementAndGet();
             }
         } catch (Exception e) {
             throw new RuntimeException("parse row data failed.", e);

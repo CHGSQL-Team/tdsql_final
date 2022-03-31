@@ -46,6 +46,8 @@ public:
 
     void executeRaw(const std::string &content);
 
+    void commit();
+
     sql::Connection *getConnection();
 
     void setAutoCommit(bool value);

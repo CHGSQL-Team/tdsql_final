@@ -19,5 +19,5 @@ public:
     void createFinalTable() const;
     void pushFromFile() const;
 
-    void flushSQL(const std::string& sqlHeader,const std::string& sqlContent) const;
+    static void flushSQL(const std::string &sqlHeader, const std::string &sqlContent, SQLInstance *instance) ;
 };
