@@ -81,14 +81,14 @@ public class EventDealer {
     public void dealEvent(LogEvent event, int position) throws IOException {
         if (event instanceof QueryLogEvent) {
             Integer startingPos = dbDropPositionLookup.get(((QueryLogEvent) event).getDbName().replace("`", ""));
-            if (startingPos == null || startingPos > position) {
+            if (startingPos == null || startingPos < position) {
                 dealEventData((QueryLogEvent) event);
             }
 
         }
         if (event instanceof RowsLogEvent) {
             Integer startingPos = dbDropPositionLookup.get(((RowsLogEvent) event).getTable().getDbName().replace("`", ""));
-            if (startingPos == null || startingPos > position) {
+            if (startingPos == null || startingPos < position) {
                 dealEventData((RowsLogEvent) event);
             }
         }

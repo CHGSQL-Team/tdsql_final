@@ -28,7 +28,7 @@ public class CanalSplitter {
         Scanner lenReader = new Scanner(eventLenFile);
         eventDealer = new EventDealer(binlogPath, sourceIndex);
         BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(eventBinFile));
-        LogDecoder decoder = new LogDecoder(LogEvent.UNKNOWN_EVENT, LogEvent.ENUM_END_EVENT);
+        LogDecoder decoder = new LogDecoder(LogEvent.QUERY_EVENT, LogEvent.TABLE_MAP_EVENT);
         LogContext context = new LogContext();
         context.setLogPosition(new LogPosition("", 4));
         int position = 0;
