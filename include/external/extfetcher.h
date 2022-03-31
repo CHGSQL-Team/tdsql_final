@@ -13,7 +13,7 @@ public:
 
     static MYSQL *_initConn(const char *ip, const char *usr, const char *pwd, unsigned int port);
 
-    void evokeFetch(int index);
+    void evokeFetch(int start, int end);
 
     std::vector<unsigned char> retrieveGtidPackage(int index);
 

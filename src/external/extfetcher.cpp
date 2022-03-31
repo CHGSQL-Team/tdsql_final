@@ -1,5 +1,6 @@
 #include "external/extfetcher.h"
 #include "boost/filesystem.hpp"
+#include "boost/asio/post.hpp"
 #include <fstream>
 
 static void fix_gtid_set(MYSQL_RPL *rpl, unsigned char *packet_gtid_set) {
@@ -69,26 +70,20 @@ void ExternalFetcher::dumpEventToFile(int index, const std::string &path, std::v
     event_length.close();
 }
 
-void ExternalFetcher::evokeFetch(int index) {
-    boost::filesystem::path dumpPath(module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".bin");
-    boost::filesystem::path eventLenPath(
-            module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".binlen");
-    std::vector<unsigned char> gtidPackage = std::move(retrieveGtidPackage(index));
-    std::cout << "[ExtF] GTIDp size = " << gtidPackage.size() << std::endl;
-    std::cout << "[ExtF] Start dumping event for " << index << std::endl;
-    module->timed.printElapsedTime();
-    dumpEventToFile(index, dumpPath.string(), gtidPackage);
-    std::cout << "[ExtF] Dumping end for " << index << std::endl;
-    module->timed.printElapsedTime();
-
-    std::string callArg = boost::filesystem::canonical(dumpPath).string() + " " +
-                          boost::filesystem::canonical(eventLenPath).string() + " " +
-                          boost::filesystem::canonical(module->config->binlog_path).string() + " " +
-                          std::to_string(index);
-
+void ExternalFetcher::evokeFetch(int start, int end) {
+    std::string callArg;
+    for (int index = start; index <= end; index++) {
+        boost::filesystem::path dumpPath(module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".bin");
+        boost::filesystem::path eventLenPath(
+                module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".binlen");
+        callArg += boost::filesystem::canonical(dumpPath).string() + " " +
+                   boost::filesystem::canonical(eventLenPath).string() + " " +
+                   boost::filesystem::canonical(module->config->binlog_path).string() + " " +
+                   std::to_string(index) + " ";
+    }
     jvmconn.callMethod("Entry", "canalSplit", callArg, "(Ljava/lang/String;)V", false);
 
-    std::cout << "[ExtF] Src " << index << " Finished" << std::endl;
+    std::cout << "[ExtF] Src from " << start << " to " << end << " Finished" << std::endl;
     module->timed.printElapsedTime();
 }
 
@@ -106,6 +101,24 @@ std::vector<unsigned char> ExternalFetcher::retrieveGtidPackage(int index) {
 }
 
 void ExternalFetcher::evokeFetchAll(int start, int end) {
-    for (int i = start; i <= end; i++)
-        evokeFetch(i);
+    if (!module->logger->find_log(log_type::FINISHED, "dumping")) {
+        std::vector<std::vector<unsigned char>> gtidPackages;
+        for (int index = start; index <= end; index++) {
+            gtidPackages.push_back(std::move(retrieveGtidPackage(index)));
+        }
+        for (int index = start; index <= end; index++) {
+            boost::filesystem::path dumpPath(
+                    module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".bin");
+            std::cout << "[ExtF] GTIDp size = " << gtidPackages[index].size() << std::endl;
+            std::cout << "[ExtF] Start dumping event for " << index << std::endl;
+            module->timed.printElapsedTime();
+            dumpEventToFile(index, dumpPath.string(), gtidPackages[index]);
+            std::cout << "[ExtF] Dumping end for " << index << std::endl;
+            module->timed.printElapsedTime();
+        }
+        module->logger->write_normal_log(log_type::FINISHED, "dumping");
+    } else {
+        std::cout << "[ExtF] Dumping skipped." << std::endl;
+    }
+    evokeFetch(start, end);
 }
