@@ -86,4 +86,5 @@ void Pusher::flushSQL(const std::string &sqlHeader, const std::string &sqlConten
         std::cout << "FAILED INSERT!!!! Because " << exception.what() << std::endl;
         std::cout << sqlHeader + sqlContent << std::endl;
     }
+    instance->commit();
 }

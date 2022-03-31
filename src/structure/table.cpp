@@ -115,7 +115,9 @@ void Table::dumpToFile(const boost::filesystem::path &path) {
     for (auto row: rows) {
         if (!row) continue;
         for (int i = 0; i < size; i++) {
-            EscapedResolver::quotedToStream(row->data[phyPos[i]], stream);
+            if (colDes[i]->def && row->data[phyPos[i]] == *(colDes[i]->def))
+                stream << "DEFAULT";
+            else EscapedResolver::quotedToStream(row->data[phyPos[i]], stream);
             if (i != size - 1) stream << ",";
         }
         stream << '\n';
