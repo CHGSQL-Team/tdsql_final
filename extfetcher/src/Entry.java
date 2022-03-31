@@ -33,7 +33,7 @@ class Portal extends Thread {
         CanalSplitter splitter = new CanalSplitter();
         try {
             splitter.doSplit(eventBinPath, eventLenPath, binlogPath_, sourceIndex);
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }

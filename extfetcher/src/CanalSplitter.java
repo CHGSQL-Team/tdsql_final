@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 public class CanalSplitter {
 
-    public void doSplit(String eventBinPath, String eventLenPath, String binlogPath_, String sourceIndex) throws IOException {
+    public void doSplit(String eventBinPath, String eventLenPath, String binlogPath_, String sourceIndex) throws IOException, InterruptedException {
         LogDecoder decoder = new LogDecoder(LogEvent.UNKNOWN_EVENT, LogEvent.ENUM_END_EVENT);
         LogContext context = new LogContext();
         context.setLogPosition(new LogPosition("", 4));
@@ -26,7 +26,9 @@ public class CanalSplitter {
             LogBuffer buf = new LogBuffer(eventByte, 0, eventLength);
             LogEvent event = decoder.decode(buf, context);
             eventDealer.dealEvent(event);
+
         }
+        eventDealer.waitIt();
         eventDealer.closeAll();
 
     }

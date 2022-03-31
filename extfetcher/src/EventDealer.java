@@ -2,6 +2,9 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
@@ -14,12 +17,15 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import com.alibaba.druid.sql.repository.SchemaRepository;
 import com.alibaba.druid.util.JdbcConstants;
 
+import static java.util.Calendar.MINUTE;
+
 public class EventDealer {
     Path binlogFolder;
     String index;
     HashMap<ImmutablePair<String, String>, Integer> tableAlterStateLookup = new HashMap<>();
     HashMap<ImmutablePair<String, String>, BufferedWriter> tableWriterLookup = new HashMap<>();
     SchemaRepository repository;
+    ExecutorService executor = Executors.newScheduledThreadPool(4);
 
     EventDealer(Path binlogFolder, String index) {
         this.binlogFolder = binlogFolder;
@@ -77,12 +83,21 @@ public class EventDealer {
         }
     }
 
-    public void dealEvent(LogEvent event) throws IOException {
+    public void dealEvent(LogEvent event) throws IOException, InterruptedException {
         if (event instanceof QueryLogEvent) {
+            executor.shutdown();
+            boolean isTerm = executor.awaitTermination(60, TimeUnit.MINUTES);
+            executor = Executors.newScheduledThreadPool(4);
             dealEventData((QueryLogEvent) event);
         }
         if (event instanceof RowsLogEvent) {
-            dealEventData((RowsLogEvent) event);
+            executor.submit(() -> {
+                try {
+                    dealEventData((RowsLogEvent) event);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 
@@ -92,7 +107,6 @@ public class EventDealer {
     }
 
     public void dealEventData(RowsLogEvent event) throws IOException {
-        AtomicLong sum = new AtomicLong(0);
         String dbName = event.getTable().getDbName();
         String tableName = event.getTable().getTableName().replace("`", "");
         String rowText = RowParser.parseRowsEvent(event);
@@ -157,5 +171,9 @@ public class EventDealer {
         tableAlterStateLookup.entrySet().removeIf(e -> e.getKey().left.equals(dbName));
     }
 
+    public void waitIt() throws InterruptedException {
+        executor.shutdown();
+        boolean isTerm = executor.awaitTermination(60, TimeUnit.MINUTES);
+    }
 
 }
