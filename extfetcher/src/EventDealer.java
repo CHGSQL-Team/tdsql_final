@@ -5,10 +5,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
-import com.alibaba.druid.sql.ast.statement.SQLAlterTableStatement;
-import com.alibaba.druid.sql.ast.statement.SQLCreateDatabaseStatement;
-import com.alibaba.druid.sql.ast.statement.SQLCreateTableStatement;
-import com.alibaba.druid.sql.ast.statement.SQLDropDatabaseStatement;
+import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
 import com.taobao.tddl.dbsync.binlog.LogEvent;
 import com.taobao.tddl.dbsync.binlog.event.QueryLogEvent;
@@ -54,8 +51,22 @@ public class EventDealer {
             ))) {
                 MySqlCreateTableStatement createTableStmt =
                         (MySqlCreateTableStatement) repository.findSchema(key.left).findTable(key.right).getStatement();
-                FinalTableFineTuner.fineTune(createTableStmt);
-                finalTableWriter.write(createTableStmt.toString());
+                String appendStr = FinalTableFineTuner.fineTune(createTableStmt);
+                finalTableWriter.write(createTableStmt + appendStr);
+            }
+            try (BufferedWriter finalTableColsWriter = new BufferedWriter(getFileWriter(
+                    binlogFolder.resolve(key.left)
+                            .resolve(key.right)
+                            .resolve("finalTableCols.txt")
+                            .toFile()
+            ))) {
+                MySqlCreateTableStatement createTableStmt =
+                        (MySqlCreateTableStatement) repository.findSchema(key.left).findTable(key.right).getStatement();
+                for (SQLColumnDefinition colDef :
+                        createTableStmt.getColumnDefinitions()) {
+                    finalTableColsWriter.write(colDef.getColumnName());
+                    finalTableColsWriter.newLine();
+                }
             }
         }
 

@@ -43,10 +43,18 @@ void Pusher::createFinalTable() const {
 }
 
 void Pusher::pushFromFile() const {
-    std::string pushSQLHeader = std::string("INSERT INTO ") + "`" + tableName + "` VALUES ";
+    std::ifstream headerStream(binlogPath / std::string("finalTableCols.txt"));
+    std::string pushSQLHeader = std::string("INSERT INTO ") + "`" + tableName + "` (";
+    std::string line;
+    bool isFirst = true;
+    while (std::getline(headerStream, line)) {
+        if (!isFirst) pushSQLHeader += ",";
+        else isFirst = false;
+        pushSQLHeader += line;
+    }
+    pushSQLHeader += ") VALUES ";
     std::ifstream stream(binlogPath / "result.csv");
     IOHelper ioHelper(&stream);
-    std::string line;
     std::string pushSQLContent;
     int contentCount = 0;
     while (!(line = ioHelper.getLine()).empty()) {
@@ -72,7 +80,7 @@ void Pusher::flushSQL(const std::string &sqlHeader, const std::string &sqlConten
     try {
         instance->executeRaw(sqlHeader + sqlContent);
     } catch (sql::SQLException &exception) {
-        std::cout << "FAILED INSERT!!!!" << std::endl;
+        std::cout << "FAILED INSERT!!!! Because " << exception.what() << std::endl;
         std::cout << sqlHeader + sqlContent << std::endl;
     }
     delete instance;

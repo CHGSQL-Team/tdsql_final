@@ -25,7 +25,7 @@ void SubWorker::work() {
             workDes->table->insertRows(newRows);
         }
         if (module->config->enable_print_table)
-            workDes->table->print(20);
+            workDes->table->print(5);
     }
     std::cout << "[Worker] Start optimization of " + workDes->db_name + "/" + workDes->table_name << std::endl;
     module->timed.printElapsedTime();

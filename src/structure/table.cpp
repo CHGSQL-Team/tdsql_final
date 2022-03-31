@@ -53,10 +53,6 @@ void Table::print(int trunc) {
         }
         std::cout << std::endl;
     }
-    std::cout << "Showing phyPos" << std::endl;
-    for (const auto &col: colDes) {
-        std::cout << col->name << ":" << col->mapping << std::endl;
-    }
     int printed = 0;
     int print_seq[colDes.size()];
     std::cout << "-------";
