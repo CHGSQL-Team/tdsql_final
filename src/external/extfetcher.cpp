@@ -117,8 +117,13 @@ void ExternalFetcher::evokeFetchAll(int start, int end) {
                     module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".bin");
             dumpEventToFile(index, dumpPath.string(), gtidPackages[index]);
         };
+        boost::asio::thread_pool dumpPool(2);
+
         for (int index = start; index <= end; index++)
-            dumpFunc(index);
+            boost::asio::post(dumpPool, [=] {
+                dumpFunc(index);
+            });
+        dumpPool.join();
         module->logger->write_normal_log(log_type::FINISHED, "dumping");
     } else {
         std::cout << "[ExtF] Dumping skipped." << std::endl;
