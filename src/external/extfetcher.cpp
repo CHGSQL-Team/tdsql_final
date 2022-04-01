@@ -70,12 +70,18 @@ void ExternalFetcher::dumpEventToFile(int index, const std::string &path, std::v
     event_length.close();
 }
 
-void ExternalFetcher::evokeFetch(int start, int end) {
+void ExternalFetcher::evokeFetch(int start, int end, std::vector<std::vector<unsigned char>> &gtidPackages) {
+    auto dumpFunc = [&](int index) {
+        boost::filesystem::path dumpPath(
+                module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".bin");
+        dumpEventToFile(index, dumpPath.string(), gtidPackages[index]);
+    };
     for (int index = start; index <= end; index++) {
         if (module->logger->find_log(log_type::FINISHED, std::string("evokeFetch") + std::to_string(index))) {
             std::cout << "[ExtF] Index " << index << " has been completed. Skipping..." << std::endl;
             continue;
         }
+        dumpFunc(index);
         boost::filesystem::path dumpPath(module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".bin");
         boost::filesystem::path eventLenPath(
                 module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".binlen");
@@ -106,29 +112,12 @@ std::vector<unsigned char> ExternalFetcher::retrieveGtidPackage(int index) {
 }
 
 void ExternalFetcher::evokeFetchAll(int start, int end) {
-    if (!module->logger->find_log(log_type::FINISHED, "dumping")) {
+    if (!module->logger->find_log(log_type::FINISHED, "evokeFetchAll")) {
         std::vector<std::vector<unsigned char>> gtidPackages;
         for (int index = start; index <= end; index++) {
             gtidPackages.push_back(std::move(retrieveGtidPackage(index)));
         }
-
-        auto dumpFunc = [&](int index) {
-            boost::filesystem::path dumpPath(
-                    module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".bin");
-            dumpEventToFile(index, dumpPath.string(), gtidPackages[index]);
-        };
-        boost::asio::thread_pool dumpPool(2);
-
-        for (int index = start; index <= end; index++)
-            boost::asio::post(dumpPool, [=] {
-                dumpFunc(index);
-            });
-        dumpPool.join();
-        module->logger->write_normal_log(log_type::FINISHED, "dumping");
-    } else {
-        std::cout << "[ExtF] Dumping skipped." << std::endl;
+        evokeFetch(start, end, gtidPackages);
+        module->logger->write_normal_log(log_type::FINISHED, "evokeFetchAll");
     }
-    std::cout << "[ExtF] Dumping end." << std::endl;
-    module->timed.printElapsedTime();
-    evokeFetch(start, end);
 }
