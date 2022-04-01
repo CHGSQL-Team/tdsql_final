@@ -2,10 +2,7 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.*;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.*;
@@ -17,15 +14,15 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import com.alibaba.druid.sql.repository.SchemaRepository;
 import com.alibaba.druid.util.JdbcConstants;
 
-import static java.util.Calendar.MINUTE;
-
 public class EventDealer {
     Path binlogFolder;
     String index;
     HashMap<ImmutablePair<String, String>, Integer> tableAlterStateLookup = new HashMap<>();
     HashMap<ImmutablePair<String, String>, BufferedWriter> tableWriterLookup = new HashMap<>();
     SchemaRepository repository;
-    ExecutorService executor = Executors.newScheduledThreadPool(4);
+    ThreadPoolExecutor executor = new ThreadPoolExecutor(4, 4,
+            0L, TimeUnit.MILLISECONDS,
+            new LimitedQueue<Runnable>(20));
 
     EventDealer(Path binlogFolder, String index) {
         this.binlogFolder = binlogFolder;
@@ -85,9 +82,15 @@ public class EventDealer {
 
     public void dealEvent(LogEvent event) throws IOException, InterruptedException {
         if (event instanceof QueryLogEvent) {
-            executor.shutdown();
-            boolean isTerm = executor.awaitTermination(60, TimeUnit.MINUTES);
-            executor = Executors.newScheduledThreadPool(4);
+            String queryStr = ((QueryLogEvent) event).getQuery();
+            if (!queryStr.equals("BEGIN") && !queryStr.equals("COMMIT") && !queryStr.contains("create") && !queryStr.contains("CREATE")) {
+                executor.shutdown();
+                boolean isTerm = executor.awaitTermination(60, TimeUnit.MINUTES);
+                executor = new ThreadPoolExecutor(4, 4,
+                        0L, TimeUnit.MILLISECONDS,
+                        new LimitedQueue<Runnable>(20));
+            }
+
             dealEventData((QueryLogEvent) event);
         }
         if (event instanceof RowsLogEvent) {

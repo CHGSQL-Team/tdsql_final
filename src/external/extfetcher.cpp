@@ -71,20 +71,25 @@ void ExternalFetcher::dumpEventToFile(int index, const std::string &path, std::v
 }
 
 void ExternalFetcher::evokeFetch(int start, int end) {
-    std::string callArg;
     for (int index = start; index <= end; index++) {
+        if (module->logger->find_log(log_type::FINISHED, std::string("evokeFetch") + std::to_string(index))) {
+            std::cout << "[ExtF] Index " << index << " has been completed. Skipping..." << std::endl;
+            continue;
+        }
         boost::filesystem::path dumpPath(module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".bin");
         boost::filesystem::path eventLenPath(
                 module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".binlen");
-        callArg += boost::filesystem::canonical(dumpPath).string() + " " +
-                   boost::filesystem::canonical(eventLenPath).string() + " " +
-                   boost::filesystem::canonical(module->config->binlog_path).string() + " " +
-                   std::to_string(index) + " ";
+        std::string callArg = boost::filesystem::canonical(dumpPath).string() + " " +
+                              boost::filesystem::canonical(eventLenPath).string() + " " +
+                              boost::filesystem::canonical(module->config->binlog_path).string() + " " +
+                              std::to_string(index) + " ";
+        jvmconn.callMethod("Entry", "canalSplitOne", callArg, "(Ljava/lang/String;)V", false);
+        std::cout << "[ExtF] Src " << index << " Finished" << std::endl;
+        module->timed.printElapsedTime();
+        module->logger->write_normal_log(log_type::FINISHED, std::string("evokeFetch") + std::to_string(index));
     }
-    jvmconn.callMethod("Entry", "canalSplit", callArg, "(Ljava/lang/String;)V", false);
 
-    std::cout << "[ExtF] Src from " << start << " to " << end << " Finished" << std::endl;
-    module->timed.printElapsedTime();
+
 }
 
 std::vector<unsigned char> ExternalFetcher::retrieveGtidPackage(int index) {
@@ -106,19 +111,19 @@ void ExternalFetcher::evokeFetchAll(int start, int end) {
         for (int index = start; index <= end; index++) {
             gtidPackages.push_back(std::move(retrieveGtidPackage(index)));
         }
-        for (int index = start; index <= end; index++) {
+
+        auto dumpFunc = [&](int index) {
             boost::filesystem::path dumpPath(
                     module->config->binlog_path + "/" + "binlog" + std::to_string(index) + ".bin");
-            std::cout << "[ExtF] GTIDp size = " << gtidPackages[index].size() << std::endl;
-            std::cout << "[ExtF] Start dumping event for " << index << std::endl;
-            module->timed.printElapsedTime();
             dumpEventToFile(index, dumpPath.string(), gtidPackages[index]);
-            std::cout << "[ExtF] Dumping end for " << index << std::endl;
-            module->timed.printElapsedTime();
-        }
+        };
+        for (int index = start; index <= end; index++)
+            dumpFunc(index);
         module->logger->write_normal_log(log_type::FINISHED, "dumping");
     } else {
         std::cout << "[ExtF] Dumping skipped." << std::endl;
     }
+    std::cout << "[ExtF] Dumping end." << std::endl;
+    module->timed.printElapsedTime();
     evokeFetch(start, end);
 }

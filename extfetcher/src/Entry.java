@@ -6,6 +6,12 @@ public class Entry {
         main(args);
     }
 
+    public static void canalSplitOne(String arg) throws InterruptedException, IOException {
+        String[] args = arg.split(" ");
+        CanalSplitter splitter = new CanalSplitter();
+        splitter.doSplit(args[0], args[1], args[2], args[3]);
+    }
+
     public static void main(String[] args) throws InterruptedException {
         Portal pt1 = new Portal(args[0], args[1], args[2], args[3]);
         Portal pt2 = new Portal(args[4], args[5], args[6], args[7]);
