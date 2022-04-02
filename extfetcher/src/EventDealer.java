@@ -1,6 +1,8 @@
 import java.io.*;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
 
@@ -14,6 +16,17 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import com.alibaba.druid.sql.repository.SchemaRepository;
 import com.alibaba.druid.util.JdbcConstants;
 
+class waitWriteItem {
+    String dbName, tableName;
+    String str;
+
+    waitWriteItem(String dbName, String tableName, String str) {
+        this.dbName = dbName;
+        this.tableName = tableName;
+        this.str = str;
+    }
+}
+
 public class EventDealer {
     Path binlogFolder;
     String index;
@@ -22,7 +35,11 @@ public class EventDealer {
     SchemaRepository repository;
     ThreadPoolExecutor executor = new ThreadPoolExecutor(4, 4,
             0L, TimeUnit.MILLISECONDS,
-            new LimitedQueue<Runnable>(20));
+            new LimitedQueue<Runnable>(40));
+    ThreadPoolExecutor backWriteExecutor = new ThreadPoolExecutor(1, 1,
+            0L, TimeUnit.MILLISECONDS,
+            new LimitedQueue<Runnable>(2));
+    List<Future<waitWriteItem>> procResult = new ArrayList<>();
 
     EventDealer(Path binlogFolder, String index) {
         this.binlogFolder = binlogFolder;
@@ -80,27 +97,42 @@ public class EventDealer {
         }
     }
 
+    public void writeBack(){
+        List<Future<waitWriteItem>> oldResult = procResult;
+        procResult = new ArrayList<>();
+        backWriteExecutor.submit(() -> {
+            for (Future<waitWriteItem> fut : oldResult) {
+                try {
+                    waitWriteItem item = fut.get();
+                    tableWriterLookup.get(new ImmutablePair<>(item.dbName, item.tableName)).write(item.str);
+                } catch (InterruptedException | ExecutionException | IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
     public void dealEvent(LogEvent event) throws IOException, InterruptedException {
         if (event instanceof QueryLogEvent) {
             String queryStr = ((QueryLogEvent) event).getQuery();
             if (!queryStr.equals("BEGIN") && !queryStr.equals("COMMIT") && !queryStr.contains("create") && !queryStr.contains("CREATE")) {
+                writeBack();
                 executor.shutdown();
                 boolean isTerm = executor.awaitTermination(60, TimeUnit.MINUTES);
                 executor = new ThreadPoolExecutor(4, 4,
                         0L, TimeUnit.MILLISECONDS,
                         new LimitedQueue<Runnable>(20));
+                backWriteExecutor.shutdown();
+                isTerm = backWriteExecutor.awaitTermination(60, TimeUnit.MINUTES);
+                backWriteExecutor = new ThreadPoolExecutor(1, 1,
+                        0L, TimeUnit.MILLISECONDS,
+                        new LimitedQueue<Runnable>(2));
             }
-
             dealEventData((QueryLogEvent) event);
         }
         if (event instanceof RowsLogEvent) {
-            executor.submit(() -> {
-                try {
-                    dealEventData((RowsLogEvent) event);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+            procResult.add(executor.submit(() -> dealEventData((RowsLogEvent) event)));
+            if (procResult.size() >= 40) writeBack();
         }
     }
 
@@ -109,11 +141,12 @@ public class EventDealer {
         return new FileWriter(filetoWrite);
     }
 
-    public void dealEventData(RowsLogEvent event) throws IOException {
-        String dbName = event.getTable().getDbName();
-        String tableName = event.getTable().getTableName().replace("`", "");
-        String rowText = RowParser.parseRowsEvent(event);
-        tableWriterLookup.get(new ImmutablePair<>(dbName, tableName)).write(rowText);
+    public waitWriteItem dealEventData(RowsLogEvent event) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        RowParser.parseRowsEvent(event, builder);
+        return new waitWriteItem(event.getTable().getDbName(),
+                event.getTable().getTableName().replace("`", ""),
+                builder.toString());
     }
 
 
@@ -175,8 +208,11 @@ public class EventDealer {
     }
 
     public void waitIt() throws InterruptedException {
+        writeBack();
         executor.shutdown();
         boolean isTerm = executor.awaitTermination(60, TimeUnit.MINUTES);
+        backWriteExecutor.shutdown();
+        isTerm = backWriteExecutor.awaitTermination(60, TimeUnit.MINUTES);
     }
 
 }

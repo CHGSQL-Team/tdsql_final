@@ -1,7 +1,6 @@
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.taobao.tddl.dbsync.binlog.*;
 import com.taobao.tddl.dbsync.binlog.event.*;
@@ -9,8 +8,7 @@ import com.taobao.tddl.dbsync.binlog.event.*;
 public class RowParser {
     protected static Charset charset = StandardCharsets.UTF_8;
 
-    public static String parseRowsEvent(RowsLogEvent event) {
-        StringBuilder ret = new StringBuilder();
+    public static void parseRowsEvent(RowsLogEvent event, StringBuilder builder) {
         try {
             RowsLogBuffer buffer = event.getRowsBuf(charset.name());
             BitSet columns = event.getColumns();
@@ -18,21 +16,20 @@ public class RowParser {
             while (buffer.nextOneRow(columns)) {
                 int type = event.getHeader().getType();
                 if (LogEvent.WRITE_ROWS_EVENT_V1 == type || LogEvent.WRITE_ROWS_EVENT == type) {
-                    parseOneRow(event, buffer, columns, true, ret);
+                    parseOneRow(event, buffer, columns, true, builder);
                 } else if (LogEvent.DELETE_ROWS_EVENT_V1 == type || LogEvent.DELETE_ROWS_EVENT == type) {
-                    parseOneRow(event, buffer, columns, false, ret);
+                    parseOneRow(event, buffer, columns, false, builder);
                 } else {
-                    parseOneRow(event, buffer, columns, false, ret);
+                    parseOneRow(event, buffer, columns, false, builder);
                     if (!buffer.nextOneRow(changeColumns, true)) {
                         break;
                     }
-                    parseOneRow(event, buffer, changeColumns, true, ret);
+                    parseOneRow(event, buffer, changeColumns, true, builder);
                 }
             }
         } catch (Exception e) {
             throw new RuntimeException("parse row data failed.", e);
         }
-        return ret.toString();
     }
 
     public static void parseOneRow(RowsLogEvent event, RowsLogBuffer buffer, BitSet cols, boolean isAfter, StringBuilder builder) {
