@@ -42,9 +42,15 @@ public:
     std::map<std::pair<std::string, std::string>, WorkDescriptor *> data;
     typedef std::map<std::pair<std::string, std::string>, WorkDescriptor *>::const_iterator const_iterator;
 
-    const_iterator begin() const { return data.begin(); }
+    typedef std::map<std::pair<std::string, std::string>, WorkDescriptor *>::const_reverse_iterator const_reverse_iterator;
 
-    const_iterator end() const { return data.end(); }
+    [[nodiscard]] const_iterator begin() const { return data.begin(); }
+
+    [[nodiscard]] const_iterator end() const { return data.end(); }
+
+    [[nodiscard]] const_reverse_iterator rbegin() const { return data.rbegin(); }
+
+    [[nodiscard]] const_reverse_iterator rend() const { return data.rend(); }
 
     WorkDescriptor *&operator[](std::pair<std::string &, std::string &> &in) { return data[in]; }
 
@@ -71,5 +77,5 @@ public:
     int mapping = -1;
     std::string *def = nullptr;
 
-    bool operator < (const ColumnDescriptor &t) const;
+    bool operator<(const ColumnDescriptor &t) const;
 };

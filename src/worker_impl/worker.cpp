@@ -2,10 +2,10 @@
 #include "worker_impl/subworker.h"
 #include "worker_impl/pusher.h"
 #include "boost/asio/post.hpp"
+#include "boost/range/adaptor/reversed.hpp"
 #include <random>
 
 Worker::Worker(Module *module) : module(module) {
-
 }
 
 void Worker::work() {
