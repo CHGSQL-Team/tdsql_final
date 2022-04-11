@@ -28,7 +28,7 @@ Worker::~Worker() {
     module->pusherPool->join();
     delete module->pusherPool;
     module->pusherPool = nullptr;
-    i_am_not_willing_to_pass();
+    //i_am_not_willing_to_pass();
 }
 
 void Worker::i_am_not_willing_to_pass() {

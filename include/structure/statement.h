@@ -49,6 +49,7 @@ public:
 class ColumnStatement {
 public:
     std::string name;
+    std::string type;
     bool isNotNull;
     std::string *defaultStr = nullptr;
 
@@ -61,7 +62,7 @@ class IndexStatement {
 public:
     std::string name;
     bool isPrimaryKey;
-    std::set<std::string> keys;
+    std::vector<std::string> keys;
 };
 
 class AlterStatement : public Statement {
@@ -131,7 +132,7 @@ class AlterAddIndexStatement : public AlterStatement {
 public:
     bool isPrimary;
     std::string indexName;
-    std::set<std::string> cols;
+    std::vector<std::string> cols;
 
     void print() override;
 

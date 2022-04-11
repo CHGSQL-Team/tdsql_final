@@ -39,6 +39,8 @@ public class DDLCompatWriter {
                 statement.getColumnDefinitions()) {
             writer.write(colDef.getColumnName().replace("`", ""));
             writer.newLine();
+            writer.write(colDef.getDataType().toString());
+            writer.newLine();
             if (checkIfNotNull(colDef.getConstraints())) writer.write("1");
             else writer.write("0");
             writer.newLine();
@@ -95,6 +97,8 @@ public class DDLCompatWriter {
             writer.newLine();
             SQLAlterTableAddColumn addColItem = (SQLAlterTableAddColumn) item;
             writer.write(addColItem.getColumns().get(0).getColumnName());
+            writer.newLine();
+            writer.write(addColItem.getColumns().get(0).getDataType().toString());
             writer.newLine();
             if (!addColItem.getColumns().get(0).getConstraints().isEmpty()
                     && addColItem.getColumns().get(0).getConstraints().get(0) instanceof SQLNotNullConstraint)
@@ -170,6 +174,8 @@ public class DDLCompatWriter {
             MySqlAlterTableChangeColumn chCol = (MySqlAlterTableChangeColumn) item;
             SQLColumnDefinition def = chCol.getNewColumnDefinition();
             writer.write(def.getColumnName());
+            writer.newLine();
+            writer.write(def.getDataType().toString());
             writer.newLine();
             if (def.containsNotNullConstaint()) writer.write("1");
             else writer.write("0");

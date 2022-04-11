@@ -27,7 +27,7 @@ public:
 
     void addColumn(ColumnDescriptor *newCol, std::string *after);
 
-    void addUniqueIndex(std::string name, const std::set<std::string> &colNames, bool isPrimary);
+    void addUniqueIndex(std::string name, const std::vector<std::string> &colNames, bool isPrimary);
 
     void dropColumn(const std::string &colName);
 
@@ -57,14 +57,14 @@ class UniqueIndex {
 public:
     Table *table;
     std::string name;
-    std::set<ColumnDescriptor *> cols;
+    std::vector<ColumnDescriptor *> cols;
     std::unordered_map<size_t, Row *> hash;
 
     bool isPrimary;
     bool isTemp;
     int *hashPhy = nullptr;
 
-    UniqueIndex(Table *table, std::string name, const std::set<std::string> &colStrs, bool isPrimary);
+    UniqueIndex(Table *table, std::string name, const std::vector<std::string> &colStrs, bool isPrimary);
 
     void reCompute();
 

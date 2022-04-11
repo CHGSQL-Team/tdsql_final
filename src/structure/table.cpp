@@ -98,7 +98,7 @@ size_t Table::getPhyPosArray(int *&array) {
     return size;
 }
 
-void Table::addUniqueIndex(std::string name, const std::set<std::string> &colNames, bool isPrimary) {
+void Table::addUniqueIndex(std::string name, const std::vector<std::string> &colNames, bool isPrimary) {
     if (indexs.size() != 1) throw std::runtime_error("Size of indexs not equal to 1 when doing addUniqueIndex!");
     auto index = indexs.begin();
     if (!(*index)->isTemp) throw std::runtime_error("Trying to insert a second non-temporary index!");
@@ -212,11 +212,12 @@ int UniqueIndex::checkRow(Row *row) {
     } else return 0;
 }
 
-UniqueIndex::UniqueIndex(Table *table, std::string name, const std::set<std::string> &colStrs, bool isPrimary) : name(
+UniqueIndex::UniqueIndex(Table *table, std::string name, const std::vector<std::string> &colStrs, bool isPrimary)
+        : name(
         std::move(name)), isPrimary(isPrimary), table(table), isTemp(false) {
 
     for (const auto &colStr: colStrs) {
-        cols.insert(*std::find_if(table->colDes.begin(), table->colDes.end(), [=](const ColumnDescriptor *col) {
+        cols.push_back(*std::find_if(table->colDes.begin(), table->colDes.end(), [=](const ColumnDescriptor *col) {
             return col->name == colStr;
         }));
     }
@@ -226,7 +227,7 @@ UniqueIndex::UniqueIndex(Table *table, std::string name, const std::set<std::str
 
 UniqueIndex::UniqueIndex(Table *table) : table(table), name("___TEMP_PRIMARY"), isPrimary(false), isTemp(true) {
     std::copy(table->colDes.begin(), table->colDes.end(), std::inserter(cols, cols.end()));
-    cols.erase(table->updCol);
+    cols.erase(std::find(cols.begin(), cols.end(), table->updCol));
     setHashPhy();
     reCompute();
 }
@@ -264,7 +265,7 @@ void UniqueIndex::setHashPhy() {
 }
 
 void UniqueIndex::deleteCol(ColumnDescriptor *delCol) {
-    auto indexTargetCol = cols.find(delCol);
+    auto indexTargetCol = std::find(cols.begin(), cols.end(), delCol);
     if (indexTargetCol != cols.end()) {
         cols.erase(indexTargetCol);
         setHashPhy();

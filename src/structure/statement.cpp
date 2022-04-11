@@ -20,10 +20,10 @@ CreateTableStatement::CreateTableStatement(IOHelper &helper) {
         if (hasName) idxName = helper.getLine();
         int isPrimary = helper.getLineInt();
         int keyCount = helper.getLineInt();
-        std::set<std::string> keys;
+        std::vector<std::string> keys;
         for (int j = 0; j < keyCount; j++) {
             std::string keyName = helper.getLine();
-            keys.insert(keyName);
+            keys.push_back(keyName);
         }
         indexs.push_back({idxName, static_cast<bool>(isPrimary), std::move(keys)});
     }
@@ -121,6 +121,7 @@ void ColumnStatement::print() const {
 
 ColumnStatement::ColumnStatement(IOHelper &helper) {
     name = helper.getLine();
+    type = helper.getLine();
     isNotNull = helper.getLineInt();
     if (helper.getLineInt() == 1) {
         defaultStr = new std::string(std::move(helper.getLine()));
@@ -231,6 +232,6 @@ AlterAddIndexStatement::AlterAddIndexStatement(IOHelper &ioHelper) : AlterStatem
         indexName = ioHelper.getLine();
     int colCount = ioHelper.getLineInt();
     for (int i = 0; i < colCount; i++) {
-        cols.insert(ioHelper.getLine());
+        cols.push_back(ioHelper.getLine());
     }
 }
