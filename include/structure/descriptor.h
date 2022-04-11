@@ -71,8 +71,9 @@ public:
 
 class ColumnDescriptor {
 public:
-    ColumnDescriptor(std::string name, std::string *def);
+    ColumnDescriptor(std::string name, std::string type, std::string *def);
 
+    std::string type;
     std::string name;
     int mapping = -1;
     std::string *def = nullptr;

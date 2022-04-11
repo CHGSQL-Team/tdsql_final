@@ -3,10 +3,11 @@
 #include <iostream>
 #include "utils/uniformlog.h"
 #include "utils/escapedstr.h"
+#include "boost/lexical_cast.hpp"
 #include <utility>
 #include <iomanip>
 
-inline bool compRows(Row *x, Row *y) {
+inline bool compByFirstColInt(Row *x, Row *y) {
     if (!x && y) return true;
     if (x && !y) return false;
     if (!x) return false;
@@ -178,8 +179,67 @@ Table::~Table() {
 }
 
 void Table::optimizeTableForDump() {
+    UniformLog log("Optimization", workDes->db_name + "/" + workDes->db_name);
     if (colDes.empty()) return;
-    std::sort(rows.begin(), rows.end(), compRows);
+    if (indexs.empty()) {
+        std::cout << "[Optimize] No index! Compare by first col!" << std::endl;
+        std::sort(rows.begin(), rows.end(), compByFirstColInt);
+    } else {
+        UniqueIndex *index = *indexs.begin();
+        if (index->cols.size() == 1) {
+            std::cout << "[Optimize] Single index! Compare single col " << index->cols[0]->name << std::endl;
+            int colMapping = index->cols[0]->mapping;
+            auto comp = [&](Row *x, Row *y) -> bool {
+                if (!x && y) return true;
+                if (x && !y) return false;
+                if (!x) return false;
+                return x->data[colMapping].size() < y->data[colMapping].size() ||
+                       (x->data[colMapping].size() == y->data[colMapping].size() &&
+                        x->data[colMapping] < y->data[colMapping]);
+
+            };
+            std::sort(rows.begin(), rows.end(), comp);
+        } else if (index->cols.size() == 2) {
+            std::cout << "[Optimize] Double index! Compare double col " << index->cols[0]->name << ","
+                      << index->cols[1]->name << std::endl;
+            int colA = index->cols[0]->mapping, colB = index->cols[1]->mapping;
+            if (index->cols[0]->type.find("int") != std::string::npos &&
+                index->cols[1]->type.find("char") != std::string::npos) {
+                std::cout << "[Optimize] Comparing Int and Char! " << std::endl;
+                auto comp = [&](Row *x, Row *y) -> bool {
+                    if (!x && y) return true;
+                    if (x && !y) return false;
+                    if (!x) return false;
+                    if (x->data[colA].size() == y->data[colA].size() && x->data[colA] == y->data[colA]) {
+                        return x->data[colB] < y->data[colB];
+                    }
+                    return x->data[colA].size() < y->data[colA].size() ||
+                           (x->data[colA].size() == y->data[colA].size() && x->data[colA] < y->data[colA]);
+
+                };
+                std::sort(rows.begin(), rows.end(), comp);
+            } else if (index->cols[0]->type.find("int") != std::string::npos &&
+                       index->cols[1]->type.find("float") != std::string::npos) {
+                std::cout << "[Optimize] Comparing Int and Float! " << std::endl;
+                auto comp = [&](Row *x, Row *y) -> bool {
+                    if (!x && y) return true;
+                    if (x && !y) return false;
+                    if (!x) return false;
+                    if (x->data[colA].size() == y->data[colA].size() && x->data[colA] == y->data[colA]) {
+                        return boost::lexical_cast<float>(x->data[colB]) < boost::lexical_cast<float>(y->data[colB]);
+                    }
+                    return x->data[colA].size() < y->data[colA].size() ||
+                           (x->data[colA].size() == y->data[colA].size() && x->data[colA] < y->data[colA]);
+
+                };
+                std::sort(rows.begin(), rows.end(), comp);
+            }
+
+        } else{
+            std::cout << "[Optimize] So many cols. Just consider first! ";
+            std::sort(rows.begin(), rows.end(), compByFirstColInt);
+        }
+    }
 }
 
 Row::Row(std::vector<std::string> &&data, int source, int stamp) : data(std::move(data)), source(source), stamp(stamp) {

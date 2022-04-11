@@ -12,7 +12,9 @@ WorkDescriptor::~WorkDescriptor() {
     delete table;
 }
 
-ColumnDescriptor::ColumnDescriptor(std::string name, std::string *def) : name(std::move(name)), def(def) {
+ColumnDescriptor::ColumnDescriptor(std::string name, std::string type, std::string *def) : name(std::move(name)),
+                                                                                           type(std::move(type)),
+                                                                                           def(def) {
 
 }
 

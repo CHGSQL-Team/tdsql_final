@@ -49,7 +49,7 @@ void CreateTableStatement::print() {
 
 void CreateTableStatement::fillToTable(Table *table) {
     for (const auto &col: cols) {
-        auto *newColDes = new ColumnDescriptor(col.name, col.defaultStr);
+        auto *newColDes = new ColumnDescriptor(col.name, col.type, col.defaultStr);
         table->addColumn(newColDes, nullptr);
     }
     for (const auto &index: indexs) {
@@ -100,7 +100,7 @@ void AlterAddColStatement::print() {
 }
 
 void AlterAddColStatement::fillToTable(Table *table) {
-    auto newCol = new ColumnDescriptor(colStat.name, colStat.defaultStr);
+    auto newCol = new ColumnDescriptor(colStat.name, colStat.type, colStat.defaultStr);
     table->addColumn(newCol, insAfter);
 }
 
